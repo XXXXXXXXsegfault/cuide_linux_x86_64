@@ -5,7 +5,6 @@
 #include "include/signal.c"
 #include "include/stat.c"
 #include "include/dirent.c"
-#include "include/pcontext.c"
 
 struct winsize winsz;
 struct termios term,old_term;
