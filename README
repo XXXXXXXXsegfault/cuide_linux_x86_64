@@ -1,0 +1,6 @@
+This is a simple "development environment" program that runs
+in Linux tty.
+
+To build this program, you can either open the "cuide"
+directory using another CUIDE program, or use my "scc_64"
+project to compile the "cuide/main.c" file.

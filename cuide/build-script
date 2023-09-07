@@ -1,0 +1,4 @@
+mkdir tmp
+scpp main.c tmp/main.i
+scc tmp/main.i tmp/main.asm
+asm tmp/main.asm cuide tmp/main.map
