@@ -4,8 +4,12 @@
 #include "include/termios.c"
 #include "include/signal.c"
 #include "include/stat.c"
+#include "include/path.c"
 #include "include/dirent.c"
 
+#include "tmp/include_cpio.c"
+
+#include "cpio_unpack.c"
 struct winsize winsz;
 struct termios term,old_term;
 unsigned short *pbuf;
@@ -14,6 +18,7 @@ int cursor_x,cursor_y;
 void page_putc(char c,int hl,int x,int y);
 void page_puts(char *s,int len,int hl,int x,int y);
 #include "project.c"
+#include "remove.c"
 
 int term_init(void)
 {
@@ -295,6 +300,10 @@ int exec_cmd(char *s,int size)
 			x1=1;
 			while(x1<x)
 			{
+				while(*arg[x1]=='/')
+				{
+					++arg[x1];
+				}
 				ret=mkdir(arg[x1],0755);
 				if(ret==-17)
 				{
@@ -307,6 +316,93 @@ int exec_cmd(char *s,int size)
 				}
 			}
 			exit(ret);
+		}
+		else if(pid>0)
+		{
+			waitpid(pid,&ret,0);
+			ioctl(0,TCSETS,&term);
+		}
+		else
+		{
+			ioctl(0,TCSETS,&term);
+			return 1;
+		}
+		return ret;
+	}
+	if(!strcmp(arg[0],"rename"))
+	{
+		int pid;
+		int ret;
+		ioctl(0,TCSETS,&old_term);
+		pid=fork();
+		if(pid==0)
+		{
+			if(fchdir(project_dir_fd))
+			{
+				exit(1);
+			}
+			signal(SIGINT,SIG_DFL);
+			signal(SIGQUIT,SIG_DFL);
+			signal(SIGTSTP,SIG_DFL);
+
+			if(x<3)
+			{
+				exit(1);
+			}
+			while(*arg[1]=='/')
+			{
+				++arg[1];
+			}
+			while(*arg[2]=='/')
+			{
+				++arg[2];
+			}
+			if(*arg[1]==0||*arg[2]==0)
+			{
+				exit(1);
+			}
+			ret=rename(arg[1],arg[2]);
+			exit(ret);
+		}
+		else if(pid>0)
+		{
+			waitpid(pid,&ret,0);
+			ioctl(0,TCSETS,&term);
+		}
+		else
+		{
+			ioctl(0,TCSETS,&term);
+			return 1;
+		}
+		return ret;
+	}
+	if(!strcmp(arg[0],"remove"))
+	{
+		int pid;
+		int ret;
+		ioctl(0,TCSETS,&old_term);
+		pid=fork();
+		if(pid==0)
+		{
+			if(fchdir(project_dir_fd))
+			{
+				exit(1);
+			}
+			signal(SIGINT,SIG_DFL);
+			signal(SIGQUIT,SIG_DFL);
+			signal(SIGTSTP,SIG_DFL);
+
+			int x1;
+			if(x<2)
+			{
+				exit(1);
+			}
+			x1=1;
+			while(x1<x)
+			{
+				remove_file(arg[x1]);
+			}
+			exit(0);
 		}
 		else if(pid>0)
 		{
@@ -450,12 +546,23 @@ int handle_key(int c)
 		if(name)
 		{
 			char *new_file_name;
+			struct stat st;
+			long pos;
 			new_file_name=malloc(strlen(current_path)+strlen(name)+5);
 			if(new_file_name)
 			{
 				strcpy(new_file_name,current_path);
 				strcat(new_file_name,name);
-				edit__edit_file(new_file_name);
+				if(fstatat(project_dir_fd,new_file_name,&st,AT_SYMLINK_NOFOLLOW)==0)
+				{
+					pos=get_edit_cursor_pos(st.dev,st.ino);
+					pos=edit__edit_file(new_file_name,pos);
+					set_edit_cursor_pos(st.dev,st.ino,pos);
+				}
+				else
+				{
+					edit__edit_file(new_file_name,0);
+				}
 				free(new_file_name);
 			}
 		}

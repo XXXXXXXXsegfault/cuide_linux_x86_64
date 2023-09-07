@@ -112,6 +112,7 @@ void display_file(void)
 	int c,s,s1;
 	int bufsize;
 	char buf[4096];
+	int cursor_char;
 	y=0;
 	cx=-1;
 	cy=0;
@@ -119,6 +120,7 @@ void display_file(void)
 	bufsize=0;
 	memcpy(&pos,&view_pos,sizeof(pos));
 	write(1,"\033[?25l\x0f\033[1;1H\033[0m",17);
+	cursor_char=32;
 	while(y<winsz.row-1)
 	{
 		x=current_x;
@@ -147,6 +149,10 @@ void display_file(void)
 				{
 					cx=x;
 					cy=y;
+					if(c>32&&c<=126)
+					{
+						cursor_char=c;
+					}
 				}
 				if(c=='\n')
 				{
@@ -307,6 +313,10 @@ void display_file(void)
 	strcat(buf,";");
 	sprinti(buf,cx+1,1);
 	strcat(buf,"H");
+	write(1,buf,strlen(buf));
+	write(1,"\033[37m\033[43m",10);
+	write(1,&cursor_char,1);
+	write(1,"\033[0m",4);
 	write(1,buf,strlen(buf));
 	write(1,"\033[?25h",6);
 }
@@ -502,22 +512,29 @@ void keypress_handler(int c)
 	}
 }
 
-void edit_file(char *file)
+long edit_file(char *file,int pos)
 {
 	struct stat st;
 	int c;
+	int ret;
 	if(fstatat(project_dir_fd,file,&st,AT_SYMLINK_NOFOLLOW))
 	{
-		return;
+		return -1;
 	}
 	if((st.mode&0170000)!=STAT_REG)
 	{
-		return;
+		return -1;
 	}
 	file_name=file;
 	if(file_load())
 	{
-		return;
+		return -1;
+	}
+	while(pos)
+	{
+		cursor_right();
+		current_x_refine();
+		--pos;
 	}
 	while(1)
 	{
@@ -535,6 +552,7 @@ void edit_file(char *file)
 			current_x_refine();
 		}
 	}
+	ret=current_pos.off;
 	release_file();
 	cmd_size=0;
 	mode=0;
@@ -543,4 +561,5 @@ void edit_file(char *file)
 	op_fifo_start=0;
 	memset(op_c_fifo,0,sizeof(op_c_fifo));
 	memset(op_off_fifo,0,sizeof(op_off_fifo));
+	return ret;
 }

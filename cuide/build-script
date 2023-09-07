@@ -1,4 +1,16 @@
 mkdir tmp
+
+scpp scripts/cpio_pack.c tmp/cpio_pack.i
+scc tmp/cpio_pack.i tmp/cpio_pack.asm
+asm tmp/cpio_pack.asm tmp/cpio_pack
+
+scpp scripts/bin_to_asm.c tmp/bin_to_asm.i
+scc tmp/bin_to_asm.i tmp/bin_to_asm.asm
+asm tmp/bin_to_asm.asm tmp/bin_to_asm
+
+tmp/cpio_pack include tmp/include.cpio
+tmp/bin_to_asm tmp/include.cpio tmp/include_cpio.c include_cpio
+
 scpp main.c tmp/main.i
 scc tmp/main.i tmp/main.asm
-asm tmp/main.asm cuide tmp/main.map
+asm tmp/main.asm cuide

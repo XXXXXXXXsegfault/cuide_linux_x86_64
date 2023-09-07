@@ -24,9 +24,25 @@ int init_project(char *dir)
 		}
 		write(fd,"# Write your build commands here.\n",34);
 		write(fd,"# Internal commands:\n",21);
-		write(fd,"# scpp, scc, asm -- internal compilers (NOT RECOMMENDED)\n",57);
+		write(fd,"# scpp, scc, asm -- internal compilers (See manual pages for usage)\n",68);
 		write(fd,"# mkdir -- create directories\n",30);
+		write(fd,"# remove -- remove files or directories\n",40);
+		write(fd,"# rename -- rename file or directory\n",37);
 		close(fd);
+		char *new_dir;
+		new_dir=malloc(strlen(dir)+30);
+		if(new_dir==NULL)
+		{
+			return 1;
+		}
+		strcpy(new_dir,dir);
+		strcat(new_dir,"/include");
+		if(cpio_unpack_to_dir((char *)include_cpio_start,(long)include_cpio_end-(long)include_cpio_start,new_dir))
+		{
+			free(new_dir);
+			return 1;
+		}
+		free(new_dir);
 	}
 	else if(ret==0&&(st.mode&0170000)==STAT_DIR)
 	{
@@ -224,4 +240,54 @@ void project_go_to_parent(void)
 	current_path[l]=0;
 	project_file_x=0;
 	project_files_load();
+}
+long get_edit_cursor_pos(long dev,long ino)
+{
+	long val[3];
+	int fd;
+	fd=openat(project_dir_fd,"_cursor_record",0,0);
+	if(fd<0)
+	{
+		return 0;
+	}
+	while(read(fd,&val,sizeof(val))==sizeof(val))
+	{
+		if(val[0]==ino&&val[1]==dev)
+		{
+			close(fd);
+			return val[2];
+		}
+	}
+	close(fd);
+	return 0;
+}
+void set_edit_cursor_pos(long dev,long ino,long pos)
+{
+	long val[3];
+	int fd;
+	if(pos<0)
+	{
+		return;
+	}
+	fd=openat(project_dir_fd,"_cursor_record",66,0644);
+	if(fd<0)
+	{
+		return;
+	}
+	while(read(fd,val,sizeof(val))==sizeof(val))
+	{
+		if(val[0]==ino&&val[1]==dev)
+		{
+			lseek(fd,-sizeof(val),1);
+			val[2]=pos;
+			write(fd,val,sizeof(val));
+			close(fd);
+			return;
+		}
+	}
+	val[0]=ino;
+	val[1]=dev;
+	val[2]=pos;
+	write(fd,val,sizeof(val));
+	close(fd);
 }

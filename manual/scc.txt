@@ -1,0 +1,74 @@
+SCC -- The internal compiler in CUIDE.
+
+Note: You can use other compilers like GCC by writing the full
+path of the compiler in the build script.
+
+To compile a file using SCC, write the following commands in
+the build script:
+
+scpp file.c file.i
+scc file.i file.asm
+asm file.asm file.elf file.map
+
+These commands will generate the following files:
+
+file.i -- preprocessed source file
+file.asm -- generated assembly source file
+file.elf -- executable file
+file.map (Optional) -- a file containing addresses of instructions,
+                       which can be used for debugging purposes
+
+*SCC Language Features*
+
+SCC recognizes a C-like language. However, there are many C features
+that SCC does not support. Here are some of them:
+
+ 1. Initializers
+
+ Use assignment statements instead.
+
+ int a=3; // Not supported
+
+ int a;
+ a=3; // Supported
+
+ 2. Structure or Union Parameters and Return Values
+
+ Use structure or union pointers instead.
+
+ 3. switch-case, for, continue
+
+ However, if-else, while, do-while, break and goto are supported.
+
+ 4. External Declarations
+
+ (To Be Continued)
+
+SCC also has some extensions.
+
+ 1. asm (Not Recommended in Applications)
+
+ Usage:
+
+ asm "INSTRUCTION" // Insert an instruction in the code
+
+ 2. namespace
+
+ Usage:
+
+ int a,b; // Declare two global variables
+ namespace core; // Set the current "namespace" value to "core"
+ int a; // This overrides the variable "a" outside the "namespace"
+ void fun(void)
+ {
+  a=a+1;
+  b=b+1; // Variables outside the "namespace" can also be used
+ }
+ namespace; // "Unset" the "namespace" value
+ void fun(void)
+ {
+  core__fun(); // Call the function declared in the "core" "namespace"
+ }
+
+Note that you cannot use standard C functions with SCC. There are
+some predefined functions. See "(PROJECT)/include" for details.
