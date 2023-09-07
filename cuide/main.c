@@ -35,7 +35,7 @@ int getc(void)
 	int c[1];
 	int ret;
 	c[0]=0;
-	ret=read(0,c,4);
+	ret=read(0,c,2);
 	if(ret<=0)
 	{
 		return 0;
@@ -44,6 +44,11 @@ int getc(void)
 	{
 		return c[0]&0xff;
 	}
+	if((c[0]&0xffff)==27)
+	{
+		return 27;
+	}
+	ret=read(0,(char *)c+2,1);
 	return c[0]&0xffffff;
 }
 void page_putc(char c,int hl,int x,int y)

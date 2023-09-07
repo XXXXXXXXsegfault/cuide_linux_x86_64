@@ -712,4 +712,6 @@ void release_file(void)
 	}
 	file_end=NULL;
 	file_head=NULL;
+	memset(&current_pos,0,sizeof(current_pos));
+	memset(&view_pos,0,sizeof(view_pos));
 }
