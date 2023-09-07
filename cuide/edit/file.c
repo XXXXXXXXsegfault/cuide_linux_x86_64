@@ -11,7 +11,7 @@ struct file_pos
 	struct file *block;
 	unsigned long long int pos;
 	unsigned long long int off;
-} current_pos,view_pos;
+} current_pos,view_pos,select_pos;
 int current_pos_end;
 void file_block_insert(struct file *prev,struct file *node)
 {
@@ -714,4 +714,5 @@ void release_file(void)
 	file_head=NULL;
 	memset(&current_pos,0,sizeof(current_pos));
 	memset(&view_pos,0,sizeof(view_pos));
+	memset(&select_pos,0,sizeof(select_pos));
 }

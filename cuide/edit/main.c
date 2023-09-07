@@ -3,7 +3,6 @@ int current_x;
 #include "file.c"
 
 int mode; // 0 -- normal, 1 -- insert, 2 -- select, 3 -- command
-struct file_pos select_pos;
 char *clipboard;
 unsigned long int clipboard_size;
 char cmd_buf[64];
@@ -537,4 +536,11 @@ void edit_file(char *file)
 		}
 	}
 	release_file();
+	cmd_size=0;
+	mode=0;
+	op_fifo_size=0;
+	op_fifo_x=0;
+	op_fifo_start=0;
+	memset(op_c_fifo,0,sizeof(op_c_fifo));
+	memset(op_off_fifo,0,sizeof(op_off_fifo));
 }
