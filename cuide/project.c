@@ -136,6 +136,8 @@ void project_files_display(void)
 {
 	int i,j;
 	struct project_file *node;
+	cursor_x=0;
+	cursor_y=0;
 	page_puts("X -- quit; UP/DOWN -- scroll up/down; RIGHT -- open; D -- new directory;",-1,1,1,0);
 	page_puts("LEFT -- go to parent directory; F -- new file; B -- run build script",-1,1,1,1);
 	page_puts("Please read manual pages before using this program.",-1,1,1,2);

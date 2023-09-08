@@ -401,6 +401,7 @@ int exec_cmd(char *s,int size)
 			while(x1<x)
 			{
 				remove_file(arg[x1]);
+				++x1;
 			}
 			exit(0);
 		}
