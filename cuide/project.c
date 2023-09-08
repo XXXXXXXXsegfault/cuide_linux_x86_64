@@ -140,8 +140,9 @@ void project_files_display(void)
 	cursor_y=0;
 	page_puts("X -- quit; UP/DOWN -- scroll up/down; RIGHT -- open; D -- new directory;",-1,1,1,0);
 	page_puts("LEFT -- go to parent directory; F -- new file; B -- run build script",-1,1,1,1);
-	page_puts("Please read manual pages before using this program.",-1,1,1,2);
-	page_puts(current_path+1,-1,0,1,4);
+	page_puts("^ -- remove file permanently",-1,1,1,2);
+	page_puts("Please read manual pages before using this program.",-1,1,1,4);
+	page_puts(current_path+1,-1,0,1,6);
 	while(1)
 	{
 		i=0;
@@ -166,12 +167,12 @@ void project_files_display(void)
 	}
 	i=0;
 	node=project_files;
-	while(node&&i<project_file_x-(int)winsz.row/2-1)
+	while(node&&i<project_file_x-(int)winsz.row/2-4)
 	{
 		++i;
 		node=node->next;
 	}
-	j=5;
+	j=7;
 	while(node&&j<winsz.row)
 	{
 		if(node->is_dir)
@@ -192,6 +193,54 @@ void project_files_display(void)
 		node=node->next;
 	}
 	cursor_x=2;
+}
+
+
+struct project_file *project_file_current(void)
+{
+	int i,j;
+	struct project_file *node;
+	while(1)
+	{
+		i=0;
+		node=project_files;
+		while(node&&i<project_file_x)
+		{
+			++i;
+			node=node->next;
+		}
+		if(node==NULL)
+		{
+			if(project_file_x==0)
+			{
+				return NULL;
+			}
+			--project_file_x;
+		}
+		else
+		{
+			break;
+		}
+	}
+	i=0;
+	node=project_files;
+	while(node&&i<project_file_x-(int)winsz.row/2-4)
+	{
+		++i;
+		node=node->next;
+	}
+	j=5;
+	while(node&&j<winsz.row)
+	{
+		if(i==project_file_x)
+		{
+			return node;
+		}
+		++i;
+		++j;
+		node=node->next;
+	}
+	return NULL;
 }
 
 char *project_open_file(void)

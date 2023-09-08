@@ -42,3 +42,11 @@ void remove_file(char *name)
 	}
 	do_remove(AT_FDCWD,name);
 }
+void remove_project_file(char *name)
+{
+	while(*name=='/')
+	{
+		++name;
+	}
+	do_remove(project_dir_fd,name);
+}

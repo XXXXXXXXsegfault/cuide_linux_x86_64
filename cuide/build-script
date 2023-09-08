@@ -14,5 +14,3 @@ tmp/bin_to_asm tmp/include.cpio tmp/include_cpio.c include_cpio
 scpp main.c tmp/main.i
 scc tmp/main.i tmp/main.asm
 asm tmp/main.asm cuide
-
-remove tmp

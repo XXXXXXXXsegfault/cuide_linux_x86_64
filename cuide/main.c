@@ -642,6 +642,49 @@ int handle_key(int c)
 		ioctl(0,TCSETS,&term);
 		return 0;
 	}
+	if(c=='^')
+	{
+		struct project_file *file;
+		char *new_file_name;
+		char c[2];
+		file=project_file_current();
+		if(file==NULL)
+		{
+			return 0;
+		}
+		if(!strcmp(file->name,"build-script")&&!strcmp(current_path,"./"))
+		{
+			return 0;
+		}
+		ioctl(0,TCSETS,&old_term);
+		write(1,"\033[2J\033[1;1H",10);
+		new_file_name=malloc(strlen(current_path)+256);
+		if(new_file_name)
+		{
+			strcpy(new_file_name,current_path);
+			strcat(new_file_name,file->name);
+			if(file->is_dir)
+			{
+				write(1,"Remove directory (AND ITS CONTENTS) \"",37);
+			}
+			else
+			{
+				write(1,"Remove file \"",13);
+			}
+			write(1,new_file_name,strlen(new_file_name));
+			write(1,"\" (y/N)? ",9);
+			if(read(0,c,2)==2&&(c[0]=='y'||c[0]=='Y')&&c[1]=='\n')
+			{
+				remove_project_file(new_file_name);
+				project_files_load();
+				project_file_x=0;
+			}
+			free(new_file_name);
+		}
+		write(1,"\033[2J\033[1;1H",10);
+		ioctl(0,TCSETS,&term);
+		return 0;
+	}
 	return 0;
 }
 void paint_all(void)
