@@ -14,6 +14,7 @@ struct winsize winsz;
 struct termios term,old_term;
 unsigned short *pbuf;
 int cursor_x,cursor_y;
+int winsize_change;
 
 void page_putc(char c,int hl,int x,int y);
 void page_puts(char *s,int len,int hl,int x,int y);
@@ -34,12 +35,49 @@ int term_init(void)
 	}
 	return 0;
 }
+void block_sigwinch(void)
+{
+	unsigned long long set[16];
+	memset(set,0,sizeof(set));
+	set[0]=1<<SIGWINCH-1;
+	sigprocmask(SIG_BLOCK,set,NULL);
+}
+void unblock_sigwinch(void)
+{
+	unsigned long long set[16];
+	memset(set,0,sizeof(set));
+	set[0]=1<<SIGWINCH-1;
+	sigprocmask(SIG_UNBLOCK,set,NULL);
+}
+void SH_winch(int sig)
+{
+	ioctl(0,TIOCGWINSZ,&winsz);
+	if(winsz.col<80)
+	{
+		winsz.col=80;
+	}
+	if(winsz.row<25)
+	{
+		winsz.row=25;
+	}
+	if(winsz.col>2000)
+	{
+		winsz.col=2000;
+	}
+	if(winsz.row>2000)
+	{
+		winsz.row=2000;
+	}
+	winsize_change=1;
+}
 int getc(void)
 {
 	int c[1];
 	int ret;
 	c[0]=0;
+	unblock_sigwinch();
 	ret=read(0,c,2);
+	block_sigwinch();
 	if(ret<=0)
 	{
 		return 0;
@@ -204,6 +242,7 @@ int exec_cmd(char *s,int size)
 			signal(SIGINT,SIG_DFL);
 			signal(SIGQUIT,SIG_DFL);
 			signal(SIGTSTP,SIG_DFL);
+			unblock_sigwinch();
 			exit(scpp__main(x,arg));
 		}
 		else if(pid>0)
@@ -233,6 +272,7 @@ int exec_cmd(char *s,int size)
 			signal(SIGINT,SIG_DFL);
 			signal(SIGQUIT,SIG_DFL);
 			signal(SIGTSTP,SIG_DFL);
+			unblock_sigwinch();
 			exit(scc__main(x,arg));
 		}
 		else if(pid>0)
@@ -262,6 +302,7 @@ int exec_cmd(char *s,int size)
 			signal(SIGINT,SIG_DFL);
 			signal(SIGQUIT,SIG_DFL);
 			signal(SIGTSTP,SIG_DFL);
+			unblock_sigwinch();
 			exit(assembler__main(x,arg));
 		}
 		else if(pid>0)
@@ -291,6 +332,7 @@ int exec_cmd(char *s,int size)
 			signal(SIGINT,SIG_DFL);
 			signal(SIGQUIT,SIG_DFL);
 			signal(SIGTSTP,SIG_DFL);
+			unblock_sigwinch();
 
 			int ret,x1;
 			if(x<2)
@@ -344,6 +386,7 @@ int exec_cmd(char *s,int size)
 			signal(SIGINT,SIG_DFL);
 			signal(SIGQUIT,SIG_DFL);
 			signal(SIGTSTP,SIG_DFL);
+			unblock_sigwinch();
 
 			if(x<3)
 			{
@@ -391,6 +434,7 @@ int exec_cmd(char *s,int size)
 			signal(SIGINT,SIG_DFL);
 			signal(SIGQUIT,SIG_DFL);
 			signal(SIGTSTP,SIG_DFL);
+			unblock_sigwinch();
 
 			int x1;
 			if(x<2)
@@ -431,6 +475,7 @@ int exec_cmd(char *s,int size)
 		signal(SIGINT,SIG_DFL);
 		signal(SIGQUIT,SIG_DFL);
 		signal(SIGTSTP,SIG_DFL);
+		unblock_sigwinch();
 		execv(arg[0],arg);
 		exit(1);
 	}
@@ -689,7 +734,16 @@ int handle_key(int c)
 }
 void paint_all(void)
 {
-	project_files_display();
+	int val;
+	do
+	{
+		project_files_display();
+		unblock_sigwinch();
+		val=winsize_change;
+		winsize_change=0;
+		block_sigwinch();
+	}
+	while(val);
 }
 int main(int argc,char **argv)
 {
@@ -709,11 +763,13 @@ int main(int argc,char **argv)
 	signal(SIGINT,SIG_IGN);
 	signal(SIGQUIT,SIG_IGN);
 	signal(SIGTSTP,SIG_IGN);
+	block_sigwinch();
+	signal(SIGWINCH,SH_winch);
 	if(ioctl(0,TIOCGWINSZ,&winsz))
 	{
 		return 1;
 	}
-	pbuf=malloc(2*(int)winsz.col*(int)winsz.row);
+	pbuf=malloc(2*2048*2048);
 	if(pbuf==NULL)
 	{
 		return 1;
@@ -733,6 +789,7 @@ int main(int argc,char **argv)
 		{
 			break;
 		}
+		winsize_change=0;
 		memset(pbuf,0,2*(int)winsz.col*(int)winsz.row);
 		paint_all();
 		display_pbuf();

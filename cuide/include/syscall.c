@@ -56,6 +56,7 @@ asm "ret"
 #define mmap(addr,size,prot,flags,fd,off) ((void *)syscall(9,addr,size,prot,flags,fd,off))
 #define munmap(addr,size) syscall(11,addr,size,0,0,0,0)
 #define brk(addr) ((void *)syscall(12,addr,0,0,0,0,0))
+#define sigprocmask(how,set,oldset) syscall(14,how,set,oldset,8,0,0)
 #define ioctl(fd,cmd,arg) syscall(16,fd,cmd,arg,0,0,0)
 #define access(path,mode) syscall(21,path,mode,0,0,0,0)
 #define pipe(fds) syscall(22,fds,0,0,0,0,0)

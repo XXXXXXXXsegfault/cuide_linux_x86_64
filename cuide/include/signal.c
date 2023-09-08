@@ -53,6 +53,9 @@ asm "jmp @__def_sigreturn"
 #define SIG_DFL ((void *)0)
 #define SIG_IGN ((void *)1)
 #define SA_RESTORER 0x4000000
+
+#define SIG_BLOCK 0
+#define SIG_UNBLOCK 1
 // NOTE: The SIG argument of signal handler is unreliable in SCC environment.
 void (*signal(int sig,void (*handler)(int)))(int)
 {

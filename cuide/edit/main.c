@@ -113,6 +113,26 @@ void display_file(void)
 	int bufsize;
 	char buf[4096];
 	int cursor_char;
+	if(winsize_change)
+	{
+		int off;
+		off=current_pos.off;
+		winsize_change=0;
+		view_pos.block=file_head;
+		view_pos.off=0;
+		view_pos.pos=0;
+		current_pos.block=file_head;
+		current_pos.off=0;
+		current_pos.pos=0;
+		current_x=0;
+		current_pos_end=0;
+		while(off)
+		{
+			cursor_right();
+			current_x_refine();
+			--off;
+		}
+	}
 	y=0;
 	cx=-1;
 	cy=0;
@@ -538,7 +558,13 @@ long edit_file(char *file,int pos)
 	}
 	while(1)
 	{
-		display_file();
+		do
+		{
+			display_file();
+			unblock_sigwinch();
+			block_sigwinch();
+		}
+		while(winsize_change);
 		c=getc();
 		if(mode==0&&c=='Q')
 		{
