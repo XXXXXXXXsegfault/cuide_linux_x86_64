@@ -3,6 +3,7 @@ int current_x;
 #include "file.c"
 
 int mode; // 0 -- normal, 1 -- insert, 2 -- select, 3 -- command
+int prev_mode;
 char *clipboard;
 unsigned long int clipboard_size;
 char cmd_buf[64];
@@ -104,15 +105,14 @@ void del_selected_str(void)
 		--size;
 	}
 }
+
 void display_file(void)
 {
 	struct file_pos pos;
 	int x,y;
 	int cx,cy;
-	int c,s,s1;
-	int bufsize;
-	char buf[4096];
-	int cursor_char;
+	int c;
+	memset(pbuf,0,2*(int)winsz.col*(int)winsz.row);
 	if(winsize_change)
 	{
 		int off;
@@ -133,212 +133,141 @@ void display_file(void)
 			--off;
 		}
 	}
+	memcpy(&pos,&view_pos,sizeof(pos));
 	y=0;
 	cx=-1;
 	cy=0;
-	s=0;
-	bufsize=0;
-	memcpy(&pos,&view_pos,sizeof(pos));
-	write(1,"\033[?25l\x0f\033[1;1H\033[0m",17);
-	cursor_char=32;
+retry:
 	while(y<winsz.row-1)
 	{
 		x=current_x;
-		s1=0;
 		while(x)
 		{
 			c=file_getc(&pos);
-			if(c==-1||c=='\n')
+			if(c=='\n')
 			{
-				s1=1;
-				break;
+				++y;
+				if(!file_pos_move_right(&pos))
+				{
+					goto End;
+				}
+				goto retry;
 			}
 			if(!file_pos_move_right(&pos))
 			{
-				s1=1;
-				break;
+				goto End;
 			}
 			--x;
 		}
-		if(!s1)
+		while(x<winsz.col)
 		{
-			while(x<winsz.col)
+			c=file_getc(&pos);
+			if(c=='\n')
 			{
-				c=file_getc(&pos);
 				if(pos.off==current_pos.off)
 				{
+					page_putc(c,4,x,y);
 					cx=x;
 					cy=y;
-					if(c>32&&c<=126)
-					{
-						cursor_char=c;
-					}
 				}
-				if(c=='\n')
+				x=0;
+				++y;
+				if(!file_pos_move_right(&pos))
 				{
-					break;
+					goto End;
 				}
-				if(c>=32&&c<127)
+				goto retry;
+			}
+			if(c>=32&&c<=126)
+			{
+				if(pos.off==current_pos.off)
 				{
-					if(if_selected(&current_pos,&pos))
-					{
-						if(bufsize>4000)
-						{
-							write(1,buf,bufsize);
-							bufsize=0;
-						}
-						memcpy(buf+bufsize,"\033[47m\033[30m",10);
-						bufsize+=10;
-					}
-					if(bufsize==4095)
-					{
-						write(1,buf,bufsize);
-						bufsize=0;
-					}
-					buf[bufsize]=c;
-					++bufsize;
-					if(if_selected(&current_pos,&pos))
-					{
-						if(bufsize>4000)
-						{
-							write(1,buf,bufsize);
-							bufsize=0;
-						}
-						memcpy(buf+bufsize,"\033[0m",4);
-						bufsize+=4;
-					}
+					page_putc(c,4,x,y);
+					cx=x;
+					cy=y;
 				}
-				else if(c==-1)
+				else if(if_selected(&current_pos,&pos))
 				{
-					break;
-				}
-				else if(c=='\t')
-				{
-					if(bufsize>4000)
-					{
-						write(1,buf,bufsize);
-						bufsize=0;
-					}
-					if(if_selected(&current_pos,&pos))
-					{
-						memcpy(buf+bufsize,"\033[47m \033[0m",10);
-					}
-					else
-					{
-						memcpy(buf+bufsize,"\033[42m \033[0m",10);
-					}
-					bufsize+=10;
+					page_putc(c,5,x,y);
 				}
 				else
 				{
-					if(bufsize>4000)
-					{
-						write(1,buf,bufsize);
-						bufsize=0;
-					}
-					if(if_selected(&current_pos,&pos))
-					{
-						memcpy(buf+bufsize,"\033[47m \033[0m",10);
-					}
-					else
-					{
-						memcpy(buf+bufsize,"\033[44m \033[0m",10);
-					}
-					bufsize+=10;
+					page_putc(c,0,x,y);
 				}
-				if(!file_pos_move_right(&pos))
+			}
+			else if(c=='\t')
+			{
+				if(pos.off==current_pos.off)
 				{
-					s=1;
-					break;
+					page_putc(32,4,x,y);
+					cx=x;
+					cy=y;
 				}
-				++x;
+				else
+				{
+					page_putc(32,2,x,y);
+				}
 			}
-		}
-		else
-		{
-			x=0;
-		}
-		if(!move_next_line(&pos))
-		{
-			s=1;
-		}
-		if(s)
-		{
-			if(cx==-1||current_pos_end)
+			else
 			{
-				cx=x;
-				cy=y;
+				if(pos.off==current_pos.off)
+				{
+					page_putc(32,4,x,y);
+					cx=x;
+					cy=y;
+				}
+				else
+				{
+					page_putc(32,3,x,y);
+				}
 			}
-		}
-		while(x<winsz.col)
-		{
-			if(bufsize==4095)
+			if(!file_pos_move_right(&pos))
 			{
-				write(1,buf,bufsize);
-				bufsize=0;
+				goto End;
 			}
-			buf[bufsize]=' ';
-			++bufsize;
 			++x;
 		}
-		++y;
-		if(s)
+		while(c!='\n')
 		{
-			break;
+			c=file_getc(&pos);
+			if(!file_pos_move_right(&pos))
+			{
+				goto End;
+			}
 		}
+		++y;
 	}
-	while(y<winsz.row-1)
+End:
+	if(cx==-1&&current_pos_end)
 	{
-		x=0;
-		while(x<winsz.col)
-		{
-			if(bufsize==4095)
-			{
-				write(1,buf,bufsize);
-				bufsize=0;
-			}
-			buf[bufsize]=' ';
-			++bufsize;
-			++x;
-		}
-		++y;
+		cursor_x=x;
+		cursor_y=y;
+		page_putc(32,4,x,y);
 	}
-	write(1,buf,bufsize);
-	write(1,"                    \r",21);
+	y=winsz.row-1;
 	if(mode==1)
 	{
-		write(1,"Insert",6);
+		page_puts("Insert",6,1,0,winsz.row-1);
 	}
 	else if(mode==2)
 	{
-		write(1,"Select",6);
+		page_puts("Select",6,1,0,winsz.row-1);
 	}
 	else if(mode==3)
 	{
-		write(1,">",1);
-		x=0;
-		while(x<cmd_size)
-		{
-			write(1,cmd_buf+x,1);
-			++x;
-		}
-		while(x<64)
-		{
-			write(1," ",1);
-			++x;
-		}
+		page_putc('>',1,0,winsz.row-1);
+		page_puts(cmd_buf,cmd_size,1,1,winsz.row-1);
 	}
-	strcpy(buf,"\033[");
-	sprinti(buf,cy+1,1);
-	strcat(buf,";");
-	sprinti(buf,cx+1,1);
-	strcat(buf,"H");
-	write(1,buf,strlen(buf));
-	write(1,"\033[37m\033[43m",10);
-	write(1,&cursor_char,1);
-	write(1,"\033[0m",4);
-	write(1,buf,strlen(buf));
-	write(1,"\033[?25h",6);
+	if(cx!=-1)
+	{
+		cursor_x=cx;
+		cursor_y=cy;
+		nocursor=0;
+	}
+	else
+	{
+		nocursor=1;
+	}
 }
 void keypress_handler(int c)
 {
@@ -374,22 +303,22 @@ void keypress_handler(int c)
 		current_x_refine();
 		return;
 	}
-	if(mode==0)
+	if(mode==0||mode==2)
 	{
-		if(c=='I')
-		{
-			mode=1;
-		}
-		else if(c=='W')
+		if(c=='W'&&mode==0)
 		{
 			save_file();
 		}
-		else if(c=='S')
+		else if(c=='I'&&mode==0)
+		{
+			mode=1;
+		}
+		else if(c=='S'&&mode==0)
 		{
 			mode=2;
 			memcpy(&select_pos,&current_pos,sizeof(current_pos));
 		}
-		else if(c=='P')
+		else if(c=='P'&&mode==0)
 		{
 			int x;
 			x=0;
@@ -414,14 +343,15 @@ void keypress_handler(int c)
 		}
 		else if(c=='>')
 		{
+			prev_mode=mode;
 			mode=3;
 			cmd_size=0;
 		}
-		else if(c=='U')
+		else if(c=='U'&&mode==0)
 		{
 			undo();
 		}
-		else if(c=='R')
+		else if(c=='R'&&mode==0)
 		{
 			redo();
 		}
@@ -438,6 +368,24 @@ void keypress_handler(int c)
 			{
 				search_forward(search_buf);
 			}
+		}
+		else if(c=='T')
+		{
+			while(file_getc(&current_pos)!='\n'&&cursor_right())
+			{
+				current_x_refine();
+			}
+		}
+		else if(c=='C'&&mode==2)
+		{
+			copy_selected_str();
+			mode=0;
+		}
+		else if(c=='D'&&mode==2)
+		{
+			copy_selected_str();
+			del_selected_str();
+			mode=0;
 		}
 	}
 	else if(mode==1)
@@ -493,20 +441,6 @@ void keypress_handler(int c)
 			current_x_refine();
 		}
 	}
-	else if(mode==2)
-	{
-		if(c=='C')
-		{
-			copy_selected_str();
-			mode=0;
-		}
-		else if(c=='D')
-		{
-			copy_selected_str();
-			del_selected_str();
-			mode=0;
-		}
-	}
 	else if(mode==3)
 	{
 		if(c>=32&&c<127)
@@ -527,9 +461,121 @@ void keypress_handler(int c)
 		else if(c=='\n')
 		{
 			issue_cmd();
-			mode=0;
+			mode=prev_mode;
 		}
 	}
+}
+long file_mtime;
+
+struct edit_context
+{
+	struct edit_context *next;
+	long mtime;
+	char *file_name;
+	struct file *file_head;
+	struct file *file_end;
+	struct file_pos current_pos;
+	struct file_pos view_pos;
+	long op_fifo_size;
+	int op_fifo_start;
+	int op_fifo_x;
+	unsigned short op_c_fifo[MAX_UNDOS];
+	unsigned long op_off_fifo[MAX_UNDOS];
+} *edit_context;
+void edit_context_save(char *name)
+{
+	struct edit_context *p;
+	char *new_name;
+	p=edit_context;
+	while(p)
+	{
+		if(!strcmp(p->file_name,name))
+		{
+			p->mtime=file_mtime;
+			p->file_head=file_head;
+			p->file_end=file_end;
+			memcpy(&p->current_pos,&current_pos,sizeof(current_pos));
+			memcpy(&p->view_pos,&view_pos,sizeof(view_pos));
+			p->op_fifo_size=op_fifo_size;
+			p->op_fifo_start=op_fifo_start;
+			p->op_fifo_x=op_fifo_x;
+			memcpy(p->op_c_fifo,op_c_fifo,sizeof(op_c_fifo));
+			memcpy(p->op_off_fifo,op_off_fifo,sizeof(op_off_fifo));
+			return;
+		}
+		p=p->next;
+	}
+	p=malloc(sizeof(*p));
+	if(p==NULL)
+	{
+		return;
+	}
+	new_name=malloc(strlen(name)+1);
+	if(new_name==NULL)
+	{
+		free(p);
+		return;
+	}
+	strcpy(new_name,name);
+	p->mtime=file_mtime;
+	p->file_name=new_name;
+	p->file_head=file_head;
+	p->file_end=file_end;
+	memcpy(&p->current_pos,&current_pos,sizeof(current_pos));
+	memcpy(&p->view_pos,&view_pos,sizeof(view_pos));
+	p->op_fifo_size=op_fifo_size;
+	p->op_fifo_start=op_fifo_start;
+	p->op_fifo_x=op_fifo_x;
+	memcpy(p->op_c_fifo,op_c_fifo,sizeof(op_c_fifo));
+	memcpy(p->op_off_fifo,op_off_fifo,sizeof(op_off_fifo));
+	p->next=edit_context;
+	edit_context=p;
+}
+int edit_context_load(char *name)
+{
+	struct edit_context *p,*pp;
+	p=edit_context;
+	pp=NULL;
+	while(p)
+	{
+		if(!strcmp(p->file_name,name))
+		{
+			if(p->mtime!=file_mtime)
+			{
+				if(pp)
+				{
+					pp->next=p->next;
+				}
+				else
+				{
+					edit_context=p->next;
+				}
+				struct file *node;
+				while(node=p->file_head)
+				{
+					p->file_head=node->next;
+					free(node);
+				}
+				free(p->file_name);
+				free(p);
+				return 0;
+			}
+			file_name=name;
+			file_head=p->file_head;
+			file_end=p->file_end;
+			memcpy(&current_pos,&p->current_pos,sizeof(current_pos));
+			memcpy(&view_pos,&p->view_pos,sizeof(view_pos));
+			op_fifo_size=p->op_fifo_size;
+			op_fifo_start=p->op_fifo_start;
+			op_fifo_x=p->op_fifo_x;
+			memcpy(op_c_fifo,p->op_c_fifo,sizeof(op_c_fifo));
+			memcpy(op_off_fifo,p->op_off_fifo,sizeof(op_off_fifo));
+			return 1;
+		}
+		pp=p;
+		p=p->next;
+	}
+	return 0;
 }
 
 long edit_file(char *file,int pos)
@@ -540,6 +586,11 @@ long edit_file(char *file,int pos)
 	if(fstatat(project_dir_fd,file,&st,AT_SYMLINK_NOFOLLOW))
 	{
 		return -1;
+	}
+	file_mtime=st.mtime;
+	if(edit_context_load(file))
+	{
+		goto loaded_file;
 	}
 	if((st.mode&0170000)!=STAT_REG)
 	{
@@ -556,6 +607,7 @@ long edit_file(char *file,int pos)
 		current_x_refine();
 		--pos;
 	}
+loaded_file:
 	while(1)
 	{
 		do
@@ -565,6 +617,7 @@ long edit_file(char *file,int pos)
 			block_sigwinch();
 		}
 		while(winsize_change);
+		display_pbuf();
 		c=getc();
 		if(mode==0&&c=='Q')
 		{
@@ -579,13 +632,22 @@ long edit_file(char *file,int pos)
 		}
 	}
 	ret=current_pos.off;
-	release_file();
+	if(!fstatat(project_dir_fd,file,&st,AT_SYMLINK_NOFOLLOW))
+	{
+		file_mtime=st.mtime;
+	}
+	edit_context_save(file);
+	file_end=NULL;
+	file_head=NULL;
+	memset(&current_pos,0,sizeof(current_pos));
+	memset(&view_pos,0,sizeof(view_pos));
+	memset(&select_pos,0,sizeof(select_pos));
 	cmd_size=0;
 	mode=0;
-	op_fifo_size=0;
-	op_fifo_x=0;
-	op_fifo_start=0;
 	memset(op_c_fifo,0,sizeof(op_c_fifo));
 	memset(op_off_fifo,0,sizeof(op_off_fifo));
+	op_fifo_size=0;
+	op_fifo_start=0;
+	op_fifo_x=0;
 	return ret;
 }

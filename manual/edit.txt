@@ -27,27 +27,25 @@ In the command mode, you can use some multi-character
 commands. After you type the full command, press ENTER
 to issue it.
 
-*Commands in Normal Mode*
+*Commands in Normal Mode or Select Mode*
 
-W (Shift+W) -- Save file
-I -- Enter insert mode
-S -- Enter select mode
+I (Shift+I) -- Enter insert mode (Normal Mode Only)
+S -- Enter select mode (Normal Mode Only)
 > -- Enter command mode
-P -- Paste Clipboard
-U -- Undo
-R -- Redo
-Q -- Exit text editor
-NOTE: This will not save your changes.
+P -- Paste Clipboard (Normal Mode Only)
+U -- Undo (Normal Mode Only)
+R -- Redo (Normal Mode Only)
+W -- Save file (Normal Mode Only)
+Q -- Exit text editor and discard changes since last 'W'
+     command (Normal Mode Only)
+T -- Move the cursor to the end of line
+C -- Copy the selected string to clipboard (Select Mode Only)
+D -- Cut the selected string to clipboard (Select Mode Only)
+NOTE: commands C and D also switch you back to normal mode.
 f -- Search forward
 F -- Search backward
 NOTE: The last two commands search for the string which is
 previously searched using the f or F command in command mode.
-
-*Commands in Select Mode*
-
-C -- Copy the selected string to clipboard
-D -- Cut the selected string to clipboard
-NOTE: These commands also switch you back to normal mode.
 
 *Commands in Command Mode*
 

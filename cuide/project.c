@@ -1,7 +1,3 @@
-int project_dir_fd;
-char current_path[4100];
-
-int project_file_x;
 int init_project(char *dir)
 {
 	int ret;

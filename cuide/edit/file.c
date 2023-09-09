@@ -298,8 +298,7 @@ int cursor_right(void)
 	}
 	if(!file_pos_move_right(&current_pos))
 	{
-		current_pos_end=1;
-		return 1;
+		return 0;
 	}
 	if(c=='\n')
 	{
@@ -461,10 +460,11 @@ void addc_end(int c)
 	{
 		if(node=malloc(sizeof(*node)))
 		{
-			if(node->buf=malloc(1))
+			if(node->buf=malloc(2))
 			{
 				node->buf[0]=c;
-				node->buflen=1;
+				node->buf[1]='\n';
+				node->buflen=2;
 				file_block_insert(file_end,node);
 			}
 			else
@@ -699,20 +699,4 @@ void save_file(void)
 		node=node->next;
 	}
 	close(fd);
-}
-void release_file(void)
-{
-	struct file *node,*p;
-	node=file_head;
-	while(node)
-	{
-		p=node;
-		node=node->next;
-		free(p);
-	}
-	file_end=NULL;
-	file_head=NULL;
-	memset(&current_pos,0,sizeof(current_pos));
-	memset(&view_pos,0,sizeof(view_pos));
-	memset(&select_pos,0,sizeof(select_pos));
 }

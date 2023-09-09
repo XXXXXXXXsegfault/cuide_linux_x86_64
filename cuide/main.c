@@ -13,13 +13,15 @@
 struct winsize winsz;
 struct termios term,old_term;
 unsigned short *pbuf;
-int cursor_x,cursor_y;
+int cursor_x,cursor_y,nocursor;
 int winsize_change;
+
+int project_dir_fd;
+char current_path[4100];
+int project_file_x;
 
 void page_putc(char c,int hl,int x,int y);
 void page_puts(char *s,int len,int hl,int x,int y);
-#include "project.c"
-#include "remove.c"
 
 int term_init(void)
 {
@@ -52,13 +54,14 @@ void unblock_sigwinch(void)
 void SH_winch(int sig)
 {
 	ioctl(0,TIOCGWINSZ,&winsz);
-	if(winsz.col<80)
+	write(1,"\033[2J\033[?25l",10);
+	if(winsz.col<10)
 	{
-		winsz.col=80;
+		winsz.col=10;
 	}
-	if(winsz.row<25)
+	if(winsz.row<10)
 	{
-		winsz.row=25;
+		winsz.row=10;
 	}
 	if(winsz.col>2000)
 	{
@@ -154,6 +157,26 @@ void display_pbuf(void)
 					memcpy(buf+bufl,"\033[1m\033[37m\033[40m",14);
 					bufl+=14;
 				}
+				else if(hl==2)
+				{
+					memcpy(buf+bufl,"\033[1m\033[37m\033[42m",14);
+					bufl+=14;
+				}
+				else if(hl==3)
+				{
+					memcpy(buf+bufl,"\033[1m\033[37m\033[44m",14);
+					bufl+=14;
+				}
+				else if(hl==4)
+				{
+					memcpy(buf+bufl,"\033[1m\033[37m\033[43m",14);
+					bufl+=14;
+				}
+				else if(hl==5)
+				{
+					memcpy(buf+bufl,"\033[1m\033[30m\033[47m",14);
+					bufl+=14;
+				}
 			}
 			if(c<32||c>126)
 			{
@@ -166,6 +189,11 @@ void display_pbuf(void)
 			++x;
 		}
 		++y;
+		if(y!=winsz.row)
+		{
+			buf[bufl]='\n';
+			++bufl;
+		}
 	}
 	write(1,buf,bufl);
 	write(1,"\033[0m",4);
@@ -175,11 +203,17 @@ void display_pbuf(void)
 	sprinti(buf,cx+1,1);
 	strcat(buf,"H");
 	write(1,buf,strlen(buf));
-	write(1,"\033[?25h",6);
+	if(!nocursor)
+	{
+		write(1,"\033[?25h",6);
+	}
 }
 
 namespace edit;
 #include "edit/main.c"
+namespace;
+#include "project.c"
+#include "remove.c"
 namespace scpp;
 #include "scc/include/lib.c"
 #include "scc/scpp/main.c"
@@ -738,6 +772,7 @@ void paint_all(void)
 	do
 	{
 		project_files_display();
+		nocursor=0;
 		unblock_sigwinch();
 		val=winsize_change;
 		winsize_change=0;
