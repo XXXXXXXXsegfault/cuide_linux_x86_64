@@ -69,7 +69,7 @@ void struct_check(struct syntax_tree *type)
 				node=struct_tab_find(t_env.struct_tab,t->subtrees[0]->value);
 				if(!node)
 				{
-					error(t->line,t->col,"incomplete type.");
+					error(t->line,t->file,"incomplete type.");
 				}
 			}
 			if(!strcmp(t->name,"union"))
@@ -77,7 +77,7 @@ void struct_check(struct syntax_tree *type)
 				node=struct_tab_find(t_env.union_tab,t->subtrees[0]->value);
 				if(!node)
 				{
-					error(t->line,t->col,"incomplete type.");
+					error(t->line,t->file,"incomplete type.");
 				}
 			}
 		}
@@ -96,18 +96,18 @@ void decl_check(struct syntax_tree *type,struct syntax_tree *decl)
 		{
 			if(!strcmp(decl->name,"function"))
 			{
-				error(decl->line,decl->col,"function returning a function declared.");
+				error(decl->line,decl->file,"function returning a function declared.");
 			}
 			if(!strcmp(decl->name,"array")||!strcmp(decl->name,"array_nosize"))
 			{
-				error(decl->line,decl->col,"function returning an array declared.");
+				error(decl->line,decl->file,"function returning an array declared.");
 			}
 		}
 		if(!strcmp(decl->subtrees[0]->name,"array")||!strcmp(decl->subtrees[0]->name,"array_nosize"))
 		{
 			if(!strcmp(decl->name,"function"))
 			{
-				error(decl->line,decl->col,"array of functions declared.");
+				error(decl->line,decl->file,"array of functions declared.");
 			}
 		}
 		if(!strcmp(decl->name,"function"))
@@ -120,11 +120,11 @@ void decl_check(struct syntax_tree *type,struct syntax_tree *decl)
 				{
 					if(!strcmp(decl->subtrees[x]->name,"struct"))
 					{
-						error(decl->subtrees[x]->line,decl->subtrees[x]->col,"cannot use structure type as function argument.");
+						error(decl->subtrees[x]->line,decl->subtrees[x]->file,"cannot use structure type as function argument.");
 					}
 					if(!strcmp(decl->subtrees[x]->name,"union"))
 					{
-						error(decl->subtrees[x]->line,decl->subtrees[x]->col,"cannot use union type as function argument.");
+						error(decl->subtrees[x]->line,decl->subtrees[x]->file,"cannot use union type as function argument.");
 					}
 				}
 				x+=2;
@@ -137,25 +137,25 @@ void decl_check(struct syntax_tree *type,struct syntax_tree *decl)
 	{
 		if(!strcmp(type->name,"void"))
 		{
-			error(type->line,type->col,"invalid use of \'void\'.");
+			error(type->line,type->file,"invalid use of \'void\'.");
 		}
 	}
 	if(!strcmp(decl->name,"function"))
 	{
 		if(!strcmp(type->name,"struct"))
 		{
-			error(type->line,type->col,"cannot use structure type as returning value.");
+			error(type->line,type->file,"cannot use structure type as returning value.");
 		}
 		if(!strcmp(type->name,"union"))
 		{
-			error(type->line,type->col,"cannot use union type as returning value.");
+			error(type->line,type->file,"cannot use union type as returning value.");
 		}
 	}
 	if(!strcmp(decl->name,"array")||!strcmp(decl->name,"array_nosize"))
 	{
 		if(!strcmp(type->name,"void"))
 		{
-			error(type->line,type->col,"invalid use of \'void\'.");
+			error(type->line,type->file,"invalid use of \'void\'.");
 		}
 	}
 	if(!strcmp(type->name,"struct")||!strcmp(type->name,"union"))
@@ -167,7 +167,7 @@ void decl_check(struct syntax_tree *type,struct syntax_tree *decl)
 			t=get_decl_type(type->subtrees[x+1]);
 			if(!strcmp(t->name,"function"))
 			{
-				error(t->line,t->col,"cannot use function as structure or union member.");
+				error(t->line,t->file,"cannot use function as structure or union member.");
 			}
 			id1=get_decl_id(type->subtrees[x+1]);
 			y=x+2;
@@ -177,7 +177,7 @@ void decl_check(struct syntax_tree *type,struct syntax_tree *decl)
 				t=type->subtrees[y+1];
 				if(!strcmp(id1,id2))
 				{
-					error(t->line,t->col,"duplicate member name.");
+					error(t->line,t->file,"duplicate member name.");
 				}
 				y+=2;
 			}
@@ -187,14 +187,14 @@ void decl_check(struct syntax_tree *type,struct syntax_tree *decl)
 		{
 			if(type->count_subtrees==1)
 			{
-				error(type->line,type->col,"no structure or union name and no member list.");
+				error(type->line,type->file,"no structure or union name and no member list.");
 			}
 		}
 		else
 		{
 			if(type->count_subtrees==1&&!is_pointer(decl)&&!get_struct_member_list(type,0))
 			{
-				error(type->line,type->col,"incomplete type.");
+				error(type->line,type->file,"incomplete type.");
 			}
 		}
 		struct_check(type);
@@ -225,7 +225,7 @@ struct syntax_tree *get_struct_member_list(struct syntax_tree *type,int def)
 			{
 				if(struct_tab_find(t_env.union_tab,type->subtrees[0]->value))
 				{
-					error(type->line,type->col,"union redefined.");
+					error(type->line,type->file,"union redefined.");
 				}
 				struct_tab_add(t_env.union_tab,type->subtrees[0]->value,type);
 			}
@@ -233,7 +233,7 @@ struct syntax_tree *get_struct_member_list(struct syntax_tree *type,int def)
 			{
 				if(struct_tab_find(t_env.struct_tab,type->subtrees[0]->value))
 				{
-					error(type->line,type->col,"structure redefined.");
+					error(type->line,type->file,"structure redefined.");
 				}
 				struct_tab_add(t_env.struct_tab,type->subtrees[0]->value,type);
 			}
@@ -311,7 +311,7 @@ void check_decl1(struct syntax_tree *type,struct syntax_tree *decl,char *name)
 	{
 		if(type_cmp(type,decl,id->type,id->decl))
 		{
-			error(type->line,type->col,"identifier redeclared as different type.");
+			error(type->line,type->file,"identifier redeclared as different type.");
 		}
 	}
 }
@@ -331,11 +331,11 @@ int check_decl2(struct syntax_tree *type,struct syntax_tree *decl,char *name)
 	{
 		if(id->def)
 		{
-			error(decl->line,decl->col,"identifier redefined.");
+			error(decl->line,decl->file,"identifier redefined.");
 		}
 		if(type_cmp(type,decl,id->type,id->decl))
 		{
-			error(decl->line,decl->col,"identifier redeclared as different type.");
+			error(decl->line,decl->file,"identifier redeclared as different type.");
 		}
 		return 1;
 	}
@@ -355,7 +355,7 @@ void add_decl(struct syntax_tree *type,struct syntax_tree *decl,int nodefine,int
 	decl1=get_decl_type(decl);
 	if(init)
 	{
-		error(init->line,init->col,"initializer not supported.");
+		error(init->line,init->file,"initializer not supported.");
 	}
 	if(!strcmp(decl1->name,"function"))
 	{
@@ -389,14 +389,14 @@ void add_decl(struct syntax_tree *type,struct syntax_tree *decl,int nodefine,int
 			calculate_expr(decl1->subtrees[1],&result);
 			if(result.is_const==0)
 			{
-				error(decl->line,decl->col,"cannot determine array size.");
+				error(decl->line,decl->file,"cannot determine array size.");
 			}
 			array_size=result.value;
 			expr_ret_release(&result);
 		}
 		else if(!strcmp(decl1->name,"array_nosize"))
 		{
-			error(decl->line,decl->col,"cannot determine array size.");
+			error(decl->line,decl->file,"cannot determine array size.");
 		}
 	}
 	if(array_size==-1&&init&&!strcmp(init->name,"init"))
@@ -602,7 +602,7 @@ void translate_fundef(struct syntax_tree *root)
 	decl2=get_decl_type(decl);
 	if(strcmp(decl2->name,"function"))
 	{
-		error(decl->line,decl->col,"declaration is not a function.");
+		error(decl->line,decl->file,"declaration is not a function.");
 	}
 	decl_check(type,decl);
 	add_decl(type,decl,0,0,0,0);
@@ -640,7 +640,7 @@ unsigned long int type_size(struct syntax_tree *type,struct syntax_tree *decl)
 		calculate_expr(decl1->subtrees[1],&result);
 		if(result.is_const==0)
 		{
-			error(decl->line,decl->col,"cannot determine array size.");
+			error(decl->line,decl->file,"cannot determine array size.");
 		}
 		ret*=result.value;
 		expr_ret_release(&result);
@@ -914,7 +914,7 @@ struct syntax_tree *array_function_to_pointer(struct syntax_tree *decl)
 	}
 	else if(!strcmp(decl1->name,"function"))
 	{
-		node=mkst("pointer",0,decl1->line,decl1->col);
+		node=mkst("pointer",0,decl1->line,decl1->file);
 		st_add_subtree(node,decl1->subtrees[0]);
 		decl1->subtrees[0]=node;
 	}

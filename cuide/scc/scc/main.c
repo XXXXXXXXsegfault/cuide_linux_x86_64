@@ -1,11 +1,11 @@
 
-void error(int line,int col,char *msg)
+void error(int line,char *file,char *msg)
 {
 	char *str;
-	str=xstrdup("line ");
+	str=xstrdup("file ");
+	str=str_s_app(str,file);
+	str=str_s_app(str," line ");
 	str=str_i_app(str,line);
-	str=str_s_app(str," column ");
-	str=str_i_app(str,col);
 	str=str_s_app(str,": error: ");
 	str=str_s_app(str,msg);
 	str=str_c_app(str,'\n');
@@ -30,6 +30,8 @@ int name_hash(char *str)
 void scc_run(void)
 {
 	struct syntax_tree *root;
+	struct label_tab *node,*p;
+	int index;
 	l_global_init();
 	expr_global_init();
 	type_global_init();
@@ -38,5 +40,22 @@ void scc_run(void)
 	p_current_word=l_words_head;
 	root=parse_file();
 	translate_file(root);
+	node=label_use;
+	while(node)
+	{
+		index=name_hash(node->name);
+		p=label_def[index];
+		while(p)
+		{
+			if(!strcmp(p->name,node->name))
+			{
+				goto Defined;
+			}
+			p=p->next;
+		}
+		error(node->line,node->file,"label not defined.");
+Defined:
+		node=node->next;
+	}
 	out_flush();
 }

@@ -6,13 +6,13 @@ struct syntax_tree *parse_asm(void)
 	{
 		return 0;
 	}
-	ret=mkst("asm",0,line,col);
+	ret=mkst("asm",0,line,file);
 	next();
 	if(cstr[0]!='\"')
 	{
-		error(line,col,"expected string after \'asm\'.");
+		error(line,file,"expected string after \'asm\'.");
 	}
-	node=mkst("asm_str",cstr,line,col);
+	node=mkst("asm_str",cstr,line,file);
 	next();
 	st_add_subtree(ret,node);
 	return ret;
@@ -22,14 +22,14 @@ struct syntax_tree *parse_init(void)
 	struct syntax_tree *ret,*node;
 	if(!strcmp(cstr,"{"))
 	{
-		ret=mkst("init",0,line,col);
+		ret=mkst("init",0,line,file);
 		next();
 		while(1)
 		{
 			node=parse_init();
 			if(node==0)
 			{
-				error(line,col,"invalid expression in initializer.");
+				error(line,file,"invalid expression in initializer.");
 			}
 			st_add_subtree(ret,node);
 			if(strcmp(cstr,","))
@@ -40,7 +40,7 @@ struct syntax_tree *parse_init(void)
 		}
 		if(strcmp(cstr,"}"))
 		{
-			error(line,col,"expected \'}\' after expression.");
+			error(line,file,"expected \'}\' after expression.");
 		}
 		next();
 		return ret;
@@ -52,14 +52,14 @@ struct syntax_tree *parse_decl_stmt(void)
 	struct syntax_tree *ret,*node,*t;
 	if(node=parse_type())
 	{
-		ret=mkst("decl",0,line,col);
+		ret=mkst("decl",0,line,file);
 		st_add_subtree(ret,node);
 		while(1)
 		{
 			node=parse_decl();
 			if(!node)
 			{
-				error(line,col,"invalid declaration.");
+				error(line,file,"invalid declaration.");
 			}
 			st_add_subtree(ret,node);
 			if(!strcmp(cstr,"="))
@@ -68,9 +68,9 @@ struct syntax_tree *parse_decl_stmt(void)
 				node=parse_init();
 				if(!node)
 				{
-					error(line,col,"invalid initializer.");
+					error(line,file,"invalid initializer.");
 				}
-				t=mkst("Init",0,line,col);
+				t=mkst("Init",0,line,file);
 				st_add_subtree(t,node);
 				st_add_subtree(ret,t);
 			}
@@ -82,7 +82,7 @@ struct syntax_tree *parse_decl_stmt(void)
 		}
 		if(strcmp(cstr,";"))
 		{
-			error(line,col,"expected \';\' after declarations.");
+			error(line,file,"expected \';\' after declarations.");
 		}
 		next();
 		return ret;
@@ -99,14 +99,14 @@ struct syntax_tree *parse_extern_decl_stmt(void)
 	next();
 	if(node=parse_type())
 	{
-		ret=mkst("extern_decl",0,line,col);
+		ret=mkst("extern_decl",0,line,file);
 		st_add_subtree(ret,node);
 		while(1)
 		{
 			node=parse_decl();
 			if(!node)
 			{
-				error(line,col,"invalid declaration.");
+				error(line,file,"invalid declaration.");
 			}
 			st_add_subtree(ret,node);
 			if(!strcmp(cstr,"="))
@@ -115,7 +115,7 @@ struct syntax_tree *parse_extern_decl_stmt(void)
 				node=parse_init();
 				if(!node)
 				{
-					error(line,col,"invalid initializer.");
+					error(line,file,"invalid initializer.");
 				}
 				st_add_subtree(ret,node);
 			}
@@ -127,7 +127,7 @@ struct syntax_tree *parse_extern_decl_stmt(void)
 		}
 		if(strcmp(cstr,";"))
 		{
-			error(line,col,"expected \';\' after declarations.");
+			error(line,file,"expected \';\' after declarations.");
 		}
 		next();
 		return ret;
@@ -144,14 +144,14 @@ struct syntax_tree *parse_static_decl_stmt(void)
 	next();
 	if(node=parse_type())
 	{
-		ret=mkst("static_decl",0,line,col);
+		ret=mkst("static_decl",0,line,file);
 		st_add_subtree(ret,node);
 		while(1)
 		{
 			node=parse_decl();
 			if(!node)
 			{
-				error(line,col,"invalid declaration.");
+				error(line,file,"invalid declaration.");
 			}
 			st_add_subtree(ret,node);
 			if(!strcmp(cstr,"="))
@@ -160,7 +160,7 @@ struct syntax_tree *parse_static_decl_stmt(void)
 				node=parse_init();
 				if(!node)
 				{
-					error(line,col,"invalid initializer.");
+					error(line,file,"invalid initializer.");
 				}
 				st_add_subtree(ret,node);
 			}
@@ -172,7 +172,7 @@ struct syntax_tree *parse_static_decl_stmt(void)
 		}
 		if(strcmp(cstr,";"))
 		{
-			error(line,col,"expected \';\' after declarations.");
+			error(line,file,"expected \';\' after declarations.");
 		}
 		next();
 		return ret;
@@ -186,7 +186,7 @@ struct syntax_tree *parse_stmt_block(void)
 	{
 		return 0;
 	}
-	ret=mkst("block",0,line,col);
+	ret=mkst("block",0,line,file);
 	next();
 	while(node=parse_stmt())
 	{
@@ -194,7 +194,7 @@ struct syntax_tree *parse_stmt_block(void)
 	}
 	if(strcmp(cstr,"}"))
 	{
-		error(line,col,"expected \'}\' after statement.");
+		error(line,file,"expected \'}\' after statement.");
 	}
 	next();
 	return ret;
@@ -206,28 +206,28 @@ struct syntax_tree *parse_if_stmt(void)
 	{
 		return 0;
 	}
-	ret=mkst("if",0,line,col);
+	ret=mkst("if",0,line,file);
 	next();
 	if(strcmp(cstr,"("))
 	{
-		error(line,col,"expected \'(\' after \'if\'.");
+		error(line,file,"expected \'(\' after \'if\'.");
 	}
 	next();
 	node=parse_expr_15();
 	if(!node)
 	{
-		error(line,col,"expected expression after \'(\'.");
+		error(line,file,"expected expression after \'(\'.");
 	}
 	st_add_subtree(ret,node);
 	if(strcmp(cstr,")"))
 	{
-		error(line,col,"expected \')\' after expression.");
+		error(line,file,"expected \')\' after expression.");
 	}
 	next();
 	node=parse_stmt();
 	if(!node)
 	{
-		error(line,col,"invalid statement.");
+		error(line,file,"invalid statement.");
 	}
 	st_add_subtree(ret,node);
 	if(!strcmp(cstr,"else"))
@@ -236,7 +236,7 @@ struct syntax_tree *parse_if_stmt(void)
 		node=parse_stmt();
 		if(!node)
 		{
-			error(line,col,"invalid statement.");
+			error(line,file,"invalid statement.");
 		}
 		st_add_subtree(ret,node);
 		ret->name="ifelse";
@@ -250,28 +250,28 @@ struct syntax_tree *parse_while_stmt(void)
 	{
 		return 0;
 	}
-	ret=mkst("while",0,line,col);
+	ret=mkst("while",0,line,file);
 	next();
 	if(strcmp(cstr,"("))
 	{
-		error(line,col,"expected \'(\' after \'while\'.");
+		error(line,file,"expected \'(\' after \'while\'.");
 	}
 	next();
 	node=parse_expr_15();
 	if(!node)
 	{
-		error(line,col,"expected expression after \'(\'.");
+		error(line,file,"expected expression after \'(\'.");
 	}
 	st_add_subtree(ret,node);
 	if(strcmp(cstr,")"))
 	{
-		error(line,col,"expected \')\' after expression.");
+		error(line,file,"expected \')\' after expression.");
 	}
 	next();
 	node=parse_stmt();
 	if(!node)
 	{
-		error(line,col,"invalid statement.");
+		error(line,file,"invalid statement.");
 	}
 	st_add_subtree(ret,node);
 	return ret;
@@ -283,38 +283,38 @@ struct syntax_tree *parse_dowhile_stmt(void)
 	{
 		return 0;
 	}
-	ret=mkst("dowhile",0,line,col);
+	ret=mkst("dowhile",0,line,file);
 	next();
 	node=parse_stmt();
 	if(!node)
 	{
-		error(line,col,"invalid statement.");
+		error(line,file,"invalid statement.");
 	}
 	st_add_subtree(ret,node);
 	if(strcmp(cstr,"while"))
 	{
-		error(line,col,"expected \'while\' after \'do\'.");
+		error(line,file,"expected \'while\' after \'do\'.");
 	}
 	next();
 	if(strcmp(cstr,"("))
 	{
-		error(line,col,"expected \'(\' after \'while\'.");
+		error(line,file,"expected \'(\' after \'while\'.");
 	}
 	next();
 	node=parse_expr_15();
 	if(!node)
 	{
-		error(line,col,"expected expression after \'(\'.");
+		error(line,file,"expected expression after \'(\'.");
 	}
 	st_add_subtree(ret,node);
 	if(strcmp(cstr,")"))
 	{
-		error(line,col,"expected \')\' after expression.");
+		error(line,file,"expected \')\' after expression.");
 	}
 	next();
 	if(strcmp(cstr,";"))
 	{
-		error(line,col,"expected \';\' after \')\'.");
+		error(line,file,"expected \';\' after \')\'.");
 	}
 	next();
 	return ret;
@@ -326,7 +326,7 @@ struct syntax_tree *parse_return_stmt(void)
 	{
 		return 0;
 	}
-	ret=mkst("return",0,line,col);
+	ret=mkst("return",0,line,file);
 	next();
 	if(node=parse_expr_15())
 	{
@@ -334,7 +334,7 @@ struct syntax_tree *parse_return_stmt(void)
 	}
 	if(strcmp(cstr,";"))
 	{
-		error(line,col,"expected \';\' after expression.");
+		error(line,file,"expected \';\' after expression.");
 	}
 	next();
 	return ret;
@@ -346,11 +346,11 @@ struct syntax_tree *parse_break_stmt(void)
 	{
 		return 0;
 	}
-	ret=mkst("break",0,line,col);
+	ret=mkst("break",0,line,file);
 	next();
 	if(strcmp(cstr,";"))
 	{
-		error(line,col,"expected \';\' after expression.");
+		error(line,file,"expected \';\' after expression.");
 	}
 	next();
 	return ret;
@@ -362,17 +362,17 @@ struct syntax_tree *parse_goto_stmt(void)
 	{
 		return 0;
 	}
-	ret=mkst("goto",0,line,col);
+	ret=mkst("goto",0,line,file);
 	next();
 	node=parse_id();
 	if(!node)
 	{
-		error(line,col,"expected label name after \'goto\'.");
+		error(line,file,"expected label name after \'goto\'.");
 	}
 	st_add_subtree(ret,node);
 	if(strcmp(cstr,";"))
 	{
-		error(line,col,"expected \';\' after expression.");
+		error(line,file,"expected \';\' after expression.");
 	}
 	next();
 	return ret;
@@ -382,7 +382,7 @@ struct syntax_tree *parse_label_stmt(void)
 	struct syntax_tree *ret,*node;
 	struct l_word_list *oldword;
 	oldword=current;
-	ret=mkst("Label",0,line,col);
+	ret=mkst("Label",0,line,file);
 	node=parse_id();
 	if(!node)
 	{
@@ -407,13 +407,13 @@ struct syntax_tree *parse_namespace(void)
 	{
 		return 0;
 	}
-	ret=mkst("namespace",0,line,col);
+	ret=mkst("namespace",0,line,file);
 	next();
 	node=parse_id_null();
 	st_add_subtree(ret,node);
 	if(strcmp(cstr,";"))
 	{
-		error(line,col,"expected \';\' after expression.");
+		error(line,file,"expected \';\' after expression.");
 	}
 	next();
 	return ret;
@@ -475,7 +475,7 @@ struct syntax_tree *parse_stmt(void)
 	}
 	if(!strcmp(cstr,";"))
 	{
-		ret=mkst("null",0,line,col);
+		ret=mkst("null",0,line,file);
 		next();
 		return ret;
 	}
@@ -488,14 +488,14 @@ struct syntax_tree *parse_fundef(void)
 	n=0;
 	if(node=parse_type())
 	{
-		ret=mkst("decl",0,line,col);
+		ret=mkst("decl",0,line,file);
 		st_add_subtree(ret,node);
 		while(1)
 		{
 			node=parse_decl();
 			if(!node)
 			{
-				error(line,col,"invalid declaration.");
+				error(line,file,"invalid declaration.");
 			}
 			st_add_subtree(ret,node);
 			if(!strcmp(cstr,"="))
@@ -504,9 +504,9 @@ struct syntax_tree *parse_fundef(void)
 				node=parse_init();
 				if(!node)
 				{
-					error(line,col,"invalid initializer.");
+					error(line,file,"invalid initializer.");
 				}
-				t=mkst("Init",0,line,col);
+				t=mkst("Init",0,line,file);
 				st_add_subtree(t,node);
 				st_add_subtree(ret,t);
 			}
@@ -519,18 +519,18 @@ struct syntax_tree *parse_fundef(void)
 		}
 		if(strcmp(cstr,";"))
 		{
-			if(n==1&&!strcmp(cstr,"{"))
+			if(n==1&&(!strcmp(cstr,"{")||!strcmp(cstr,"asm")))
 			{
 				node=parse_stmt_block();
 				if(node==0)
 				{
-					error(line,col,"invalid function definition.");
+					error(line,file,"invalid function definition.");
 				}
 				st_add_subtree(ret,node);
 				ret->name="fundef";
 				return ret;
 			}
-			error(line,col,"expected \';\' after declarations.");
+			error(line,file,"expected \';\' after declarations.");
 		}
 		next();
 		return ret;

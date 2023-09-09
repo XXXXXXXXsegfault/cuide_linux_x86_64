@@ -10,12 +10,12 @@ void calculate_assign_sub(struct syntax_tree *root,struct expr_ret *ret)
 	calculate_expr(root->subtrees[1],&right);
 	if(left.is_lval==0||is_array_function(left.decl))
 	{
-		error(root->line,root->col,"lvalue required here.");
+		error(root->line,root->file,"lvalue required here.");
 	}
-	deref_ptr(&right,root->line,root->col);
+	deref_ptr(&right,root->line,root->file);
 	if(!is_basic_decl(right.decl))
 	{
-		error(root->line,root->col,"invalid operand for \'-=\'.");
+		error(root->line,root->file,"invalid operand for \'-=\'.");
 	}
 	if(left.needs_deref)
 	{
@@ -38,7 +38,7 @@ void calculate_assign_sub(struct syntax_tree *root,struct expr_ret *ret)
 		}
 		else
 		{
-			error(root->line,root->col,"invalid operand for \'-=\'.");
+			error(root->line,root->file,"invalid operand for \'-=\'.");
 		}
 		
 		new_type=syntax_tree_dup(left.type);

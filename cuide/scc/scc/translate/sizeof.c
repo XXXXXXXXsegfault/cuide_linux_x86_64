@@ -25,8 +25,8 @@ void calculate_sizeof(struct syntax_tree *root,struct expr_ret *ret)
 	ret->value=size;
 	ret->is_lval=0;
 	ret->needs_deref=0;
-	ret->decl=mkst("Identifier","<NULL>",root->line,root->col);
-	ret->type=mkst("u64",0,root->line,root->col);
+	ret->decl=mkst("Identifier","<NULL>",root->line,root->file);
+	ret->type=mkst("u64",0,root->line,root->file);
 }
 void calculate_sizeof_type(struct syntax_tree *root,struct expr_ret *ret)
 {
@@ -42,6 +42,6 @@ void calculate_sizeof_type(struct syntax_tree *root,struct expr_ret *ret)
 	ret->value=size;
 	ret->is_lval=0;
 	ret->needs_deref=0;
-	ret->decl=mkst("Identifier","<NULL>",root->line,root->col);
-	ret->type=mkst("u64",0,root->line,root->col);
+	ret->decl=mkst("Identifier","<NULL>",root->line,root->file);
+	ret->type=mkst("u64",0,root->line,root->file);
 }

@@ -32,6 +32,13 @@ struct id_tab
 	struct id_tab *next;
 	long int def;
 };
+struct label_tab
+{
+	char *name;
+	char *file;
+	long line;
+	struct label_list *next;
+} *label_use,*label_def[1021];
 struct struct_tab
 {
 	char *name;
@@ -357,6 +364,27 @@ void c_write_num(unsigned long num)
 	c_write(buf,strlen(buf));
 	free(buf);
 }
+void c_write_pos(struct syntax_tree *pos)
+{
+	char *s,*p;
+	s=0;
+	p=pos->file;
+	s=xstrdup("asm \".line ");
+	while(*p)
+	{
+		if(*p=='\"'||*p=='\\')
+		{
+			s=str_c_app(s,'\\');
+		}
+		s=str_c_app(s,*p);
+		++p;
+	}
+	s=str_c_app(s,' ');
+	s=str_i_app(s,pos->line);
+	s=str_s_app(s,"\"\n");
+	c_write(s,strlen(s));
+	free(s);
+}
 #include "decl.c"
 #include "expr.c"
 #include "stmt.c"
@@ -372,6 +400,7 @@ void translate_file(struct syntax_tree *root)
 		}
 		else if(!strcmp(root->subtrees[x]->name,"fundef"))
 		{
+			c_write_pos(root->subtrees[x]);
 			translate_fundef(root->subtrees[x]);
 		}
 		else if(!strcmp(root->subtrees[x]->name,"namespace"))
@@ -380,6 +409,7 @@ void translate_file(struct syntax_tree *root)
 		}
 		else if(!strcmp(root->subtrees[x]->name,"asm"))
 		{
+			c_write_pos(root->subtrees[x]);
 			translate_asm(root->subtrees[x]);
 		}
 		++x;

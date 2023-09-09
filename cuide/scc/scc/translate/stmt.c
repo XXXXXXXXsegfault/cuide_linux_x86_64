@@ -26,7 +26,7 @@ void translate_return(struct syntax_tree *root)
 	if(root->count_subtrees)
 	{
 		calculate_expr(root->subtrees[0],&ret);
-		deref_ptr(&ret,root->line,root->col);
+		deref_ptr(&ret,root->line,root->file);
 		if(ret.is_const)
 		{
 			name=str_i_app(0,ret.value);
@@ -122,7 +122,7 @@ void translate_break(struct syntax_tree *root)
 	char *name;
 	if(!t_env.label_in_use)
 	{
-		error(root->line,root->col,"unexpected \'break\'.");
+		error(root->line,root->file,"unexpected \'break\'.");
 	}
 	c_write("bal ",4);
 	name=str_i_app(0,t_env.break_label->l3);
@@ -134,6 +134,7 @@ void translate_break(struct syntax_tree *root)
 void translate_goto(struct syntax_tree *root)
 {
 	char *name;
+	struct label_tab *node;
 	c_write("bal ",4);
 	name=xstrdup("_$CL$");
 	name=str_i_app(name,t_env.func_num);
@@ -141,11 +142,18 @@ void translate_goto(struct syntax_tree *root)
 	name=str_s_app(name,root->subtrees[0]->value);
 	c_write(name,strlen(name));
 	c_write("\n",1);
-	free(name);
+	node=xmalloc(sizeof(*node));
+	node->name=name;
+	node->file=root->file;
+	node->line=root->line;
+	node->next=label_use;
+	label_use=node;
 }
 void translate_label(struct syntax_tree *root)
 {
 	char *name;
+	struct label_tab *node;
+	int index;
 	c_write("label ",6);
 	name=xstrdup("_$CL$");
 	name=str_i_app(name,t_env.func_num);
@@ -153,7 +161,13 @@ void translate_label(struct syntax_tree *root)
 	name=str_s_app(name,root->subtrees[0]->value);
 	c_write(name,strlen(name));
 	c_write("\n",1);
-	free(name);
+	node=xmalloc(sizeof(*node));
+	node->name=name;
+	node->file=root->file;
+	node->line=root->line;
+	index=name_hash(name);
+	node->next=label_def[index];
+	label_def[index]=node;
 }
 void translate_ifelse(struct syntax_tree *root)
 {
@@ -184,6 +198,7 @@ void translate_asm(struct syntax_tree *node)
 void translate_stmt(struct syntax_tree *node)
 {
 	struct expr_ret ret;
+	c_write_pos(node);
 	if(!strcmp(node->name,"asm"))
 	{
 		translate_asm(node);
@@ -198,7 +213,7 @@ void translate_stmt(struct syntax_tree *node)
 	}
 	if(!strcmp(node->name,"extern_decl"))
 	{
-		error(node->line,node->col,"\'extern\' not supported.");
+		error(node->line,node->file,"\'extern\' not supported.");
 	}
 	else if(!strcmp(node->name,"expr"))
 	{

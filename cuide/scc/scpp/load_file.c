@@ -254,7 +254,7 @@ void load_file(char *current_dir,char *name,int fd,int check)
 	long int len;
 	char *word;
 	flines=current_line;
-	while(str=read_line(fd))
+	while(str=read_line(fd,current_dir,name,flines))
 	{
 		if((str1=get_ppcmd(str)))
 		{

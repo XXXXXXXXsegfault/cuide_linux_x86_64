@@ -95,6 +95,7 @@ asm "ret"
 #define symlink(target,path) syscall(88,target,path,0,0,0,0)
 #define chown(name,uid,gid) syscall(92,name,uid,gid,0,0,0)
 #define gettimeofday(tv,tz) syscall(96,tv,tz,0,0,0,0)
+#define ptrace(req,pid,addr,data) syscall(101,req,pid,addr,data,0,0)
 #define getuid() syscall(102,0,0,0,0,0,0)
 #define setuid(uid) syscall(105,uid,0,0,0,0,0)
 #define setgid(gid) syscall(106,gid,0,0,0,0,0)

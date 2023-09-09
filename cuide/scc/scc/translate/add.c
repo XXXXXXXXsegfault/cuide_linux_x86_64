@@ -20,19 +20,19 @@ void calculate_add(struct syntax_tree *root,struct expr_ret *ret)
 		expr_ret_release(&right);
 		return;
 	}
-	deref_ptr(&left,root->line,root->col);
-	deref_ptr(&right,root->line,root->col);
+	deref_ptr(&left,root->line,root->file);
+	deref_ptr(&right,root->line,root->file);
 	if(if_type_compat(left.type,left.decl,right.type,right.decl,1))
 	{
-		error(root->line,root->col,"incompatible type.");
+		error(root->line,root->file,"incompatible type.");
 	}
 	if(is_pointer_array_function(right.decl))
 	{
-		error(right.decl->line,right.decl->col,"cannot use pointer as right operand of \'+\'.");
+		error(right.decl->line,right.decl->file,"cannot use pointer as right operand of \'+\'.");
 	}
 	else if(!is_basic_type(right.type))
 	{
-		error(right.decl->line,right.decl->col,"invalid use of \'+\'.");
+		error(right.decl->line,right.decl->file,"invalid use of \'+\'.");
 	}
 	new_name=mktmpname();
 	if(is_pointer_array_function(left.decl))

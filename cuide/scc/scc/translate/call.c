@@ -5,35 +5,35 @@ void calculate_call(struct syntax_tree *root,struct expr_ret *ret)
 	struct expr_ret result,func;
 	char *name,*new_name;
 	calculate_expr(root->subtrees[0],&func);
-	deref_ptr(&func,root->line,root->col);
+	deref_ptr(&func,root->line,root->file);
 	if(!is_function(func.decl))
 	{
 		if(!is_pointer_array(func.decl))
 		{
-			error(root->line,root->col,"calling a non-function.");
+			error(root->line,root->file,"calling a non-function.");
 		}
 		decl=decl_next(func.decl);
 		syntax_tree_release(func.decl);
 		func.decl=decl;
 		if(!is_function(func.decl))
 		{
-			error(root->line,root->col,"calling a non-function.");
+			error(root->line,root->file,"calling a non-function.");
 		}
 	}
 	decl1=get_decl_type(func.decl);
 	if(decl1->count_subtrees-1>>1!=root->count_subtrees-1)
 	{
-		error(root->line,root->col,"numbers of arguments did not match.");
+		error(root->line,root->file,"numbers of arguments did not match.");
 	}
 	x=root->count_subtrees;
 	while(x>1)
 	{
 		--x;
 		calculate_expr(root->subtrees[x],&result);
-		deref_ptr(&result,root->subtrees[x]->line,root->subtrees[x]->col);
+		deref_ptr(&result,root->subtrees[x]->line,root->subtrees[x]->file);
 		if(if_type_compat(result.type,result.decl,decl1->subtrees[x*2-1],decl1->subtrees[x*2],1))
 		{
-			error(root->line,root->col,"incompatible type.");
+			error(root->line,root->file,"incompatible type.");
 		}
 		if(is_float_type(decl1->subtrees[x*2-1])&&!is_pointer_array_function(decl1->subtrees[x*2]))
 		{

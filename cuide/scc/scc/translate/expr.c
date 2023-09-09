@@ -182,7 +182,7 @@ struct syntax_tree *get_addr(struct syntax_tree *decl)
 	struct syntax_tree *decl1,*ret,*node;
 	ret=syntax_tree_dup(decl);
 	decl1=get_decl_type(ret);
-	node=mkst("pointer",0,decl1->line,decl1->col);
+	node=mkst("pointer",0,decl1->line,decl1->file);
 	if(!strcmp(decl1->name,"Identifier"))
 	{
 		st_add_subtree(node,decl1);
@@ -199,7 +199,7 @@ void calculate_id(struct syntax_tree *root,struct expr_ret *ret)
 	id=id_find(root->value);
 	if(!id)
 	{
-		error(root->line,root->col,"identifier not declared.");
+		error(root->line,root->file,"identifier not declared.");
 	}
 	decl=get_decl_type(id->decl);
 	ret->is_lval=1;
@@ -220,9 +220,9 @@ void calculate_const(struct syntax_tree *root,struct expr_ret *ret)
 	if(root->value[0]=='\"')
 	{
 		t_name=mktmpname();
-		type=mkst("s8",0,root->line,root->col);
-		node=mkst("Identifier",t_name,root->line,root->col);
-		decl=mkst("pointer",0,root->line,root->col);
+		type=mkst("s8",0,root->line,root->file);
+		node=mkst("Identifier",t_name,root->line,root->file);
+		decl=mkst("pointer",0,root->line,root->file);
 		st_add_subtree(decl,node);
 		ret->type=type;
 		ret->decl=decl;
@@ -243,8 +243,8 @@ void calculate_const(struct syntax_tree *root,struct expr_ret *ret)
 		ret->is_lval=0;
 		ret->is_const=1;
 		ret->needs_deref=0;
-		ret->type=mkst("u64",0,root->line,root->col);
-		ret->decl=mkst("Identifier","<NULL>",root->line,root->col);
+		ret->type=mkst("u64",0,root->line,root->file);
+		ret->decl=mkst("Identifier","<NULL>",root->line,root->file);
 		ret->value=const_to_num(root->value);
 	}
 }
@@ -255,8 +255,8 @@ void calculate_fconst(struct syntax_tree *root,struct expr_ret *ret)
 	ret->is_lval=0;
 	ret->is_const=0;
 	ret->needs_deref=0;
-	ret->type=mkst("float",0,root->line,root->col);
-	ret->decl=mkst("Identifier",t_name,root->line,root->col);
+	ret->type=mkst("float",0,root->line,root->file);
+	ret->decl=mkst("Identifier",t_name,root->line,root->file);
 	c_write("local float ",12);
 	c_write(t_name,strlen(t_name));
 	c_write("\n",1);
@@ -266,7 +266,7 @@ void calculate_fconst(struct syntax_tree *root,struct expr_ret *ret)
 	c_write(root->value,strlen(root->value));
 	c_write("\n",1);
 }
-void deref_ptr(struct expr_ret *ret,int line,int col)
+void deref_ptr(struct expr_ret *ret,int line,int file)
 {
 	char *str,*old_name;
 	struct syntax_tree *decl,*t;
@@ -292,15 +292,15 @@ void deref_ptr(struct expr_ret *ret,int line,int col)
 	{
 		if(!strcmp(ret->type->name,"struct"))
 		{
-			error(line,col,"invalid use of structure.");
+			error(line,file,"invalid use of structure.");
 		}
 		if(!strcmp(ret->type->name,"union"))
 		{
-			error(line,col,"invalid use of union.");
+			error(line,file,"invalid use of union.");
 		}
 		if(!strcmp(ret->type->name,"void"))
 		{
-			error(line,col,"invalid type.");
+			error(line,file,"invalid type.");
 		}
 		if(!strcmp(ret->type->name,"s8")||!strcmp(ret->type->name,"u8"))
 		{
@@ -665,6 +665,6 @@ void calculate_expr(struct syntax_tree *root,struct expr_ret *ret)
 	}
 	else
 	{
-		error(root->line,root->col,"unsupported operator.");
+		error(root->line,root->file,"unsupported operator.");
 	}
 }

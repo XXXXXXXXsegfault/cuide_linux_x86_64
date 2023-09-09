@@ -9,7 +9,7 @@ void calculate_inc(struct syntax_tree *root,struct expr_ret *ret)
 	calculate_expr(root->subtrees[0],&result);
 	if(result.is_lval==0||is_array_function(result.decl))
 	{
-		error(root->line,root->col,"lvalue required here.");
+		error(root->line,root->file,"lvalue required here.");
 	}
 	if(result.needs_deref)
 	{
@@ -17,7 +17,7 @@ void calculate_inc(struct syntax_tree *root,struct expr_ret *ret)
 		decl1=decl_next(result.decl);
 		if(!is_integer_type(result.type,decl1))
 		{
-			error(root->line,root->col,"incompatible type.");
+			error(root->line,root->file,"incompatible type.");
 		}
 		if(is_pointer_array(decl1))
 		{
@@ -36,7 +36,7 @@ void calculate_inc(struct syntax_tree *root,struct expr_ret *ret)
 		}
 		else
 		{
-			error(root->line,root->col,"invalid operand for \'++\'.");
+			error(root->line,root->file,"invalid operand for \'++\'.");
 		}
 		new_type=syntax_tree_dup(result.type);
 	//	new_decl=syntax_tree_dup(result.decl);
@@ -217,7 +217,7 @@ void calculate_inc(struct syntax_tree *root,struct expr_ret *ret)
 	{
 		if(!is_integer_type(result.type,result.decl))
 		{
-			error(root->line,root->col,"incompatible type.");
+			error(root->line,root->file,"incompatible type.");
 		}
 		if(is_pointer_array(result.decl))
 		{

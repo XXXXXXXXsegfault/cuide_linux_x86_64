@@ -24,13 +24,13 @@ void translate_branch_relop(struct syntax_tree *root,struct branch_args *args,ch
 	int val;
 	calculate_expr(root->subtrees[0],&left);
 	calculate_expr(root->subtrees[1],&right);
-	deref_ptr(&left,root->line,root->col);
-	deref_ptr(&right,root->line,root->col);
+	deref_ptr(&left,root->line,root->file);
+	deref_ptr(&right,root->line,root->file);
 	if(!left.is_const&&!right.is_const)
 	{
 		if(if_type_compat(left.type,left.decl,right.type,right.decl,0))
 		{
-			error(root->line,root->col,"incompatible type.");
+			error(root->line,root->file,"incompatible type.");
 		}
 	}
 	if(left.is_const&&right.is_const)
@@ -224,7 +224,7 @@ void translate_branch(struct syntax_tree *root,struct branch_args *args)
 	else
 	{
 		calculate_expr(root,&result);
-		deref_ptr(&result,root->line,root->col);
+		deref_ptr(&result,root->line,root->file);
 		if(result.is_const)
 		{
 			if(result.value&&args->ltrue!=-1)

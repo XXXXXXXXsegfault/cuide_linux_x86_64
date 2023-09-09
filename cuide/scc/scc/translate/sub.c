@@ -22,18 +22,18 @@ void calculate_sub(struct syntax_tree *root,struct expr_ret *ret)
 		expr_ret_release(&right);
 		return;
 	}
-	deref_ptr(&left,root->line,root->col);
-	deref_ptr(&right,root->line,root->col);
+	deref_ptr(&left,root->line,root->file);
+	deref_ptr(&right,root->line,root->file);
 	if(if_type_compat(left.type,left.decl,right.type,right.decl,1))
 	{
-		error(root->line,root->col,"incompatible type.");
+		error(root->line,root->file,"incompatible type.");
 	}
 	new_name=mktmpname();
 	if(is_pointer_array_function(right.decl))
 	{
 		if(!is_pointer_array_function(left.decl))
 		{
-			error(right.decl->line,right.decl->col,"invalid use of \'-\'.");
+			error(right.decl->line,right.decl->file,"invalid use of \'-\'.");
 		}
 		decl1=decl_next(left.decl);
 		scale=type_size(left.type,decl1);
@@ -42,8 +42,8 @@ void calculate_sub(struct syntax_tree *root,struct expr_ret *ret)
 		{
 			scale=1;
 		}
-		new_type=mkst("s64",0,left.type->line,left.type->col);
-		new_decl=mkst("Identifier","<NULL>",left.type->line,left.type->col);
+		new_type=mkst("s64",0,left.type->line,left.type->file);
+		new_decl=mkst("Identifier","<NULL>",left.type->line,left.type->file);
 		r_scale=1;
 	}
 	else 

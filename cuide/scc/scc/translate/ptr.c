@@ -6,7 +6,7 @@ void calculate_addr(struct syntax_tree *root,struct expr_ret *ret)
 	calculate_expr(root->subtrees[0],&result);
 	if(result.is_lval==0)
 	{
-		error(root->line,root->col,"lvalue required here.");
+		error(root->line,root->file,"lvalue required here.");
 	}
 	if(result.needs_deref)
 	{
@@ -84,10 +84,10 @@ void calculate_addr(struct syntax_tree *root,struct expr_ret *ret)
 void calculate_deref(struct syntax_tree *root,struct expr_ret *ret)
 {
 	calculate_expr(root->subtrees[0],ret);
-	deref_ptr(ret,root->line,root->col);
+	deref_ptr(ret,root->line,root->file);
 	if(!is_pointer_array(ret->decl))
 	{
-		error(root->line,root->col,"pointer required here.");
+		error(root->line,root->file,"pointer required here.");
 	}
 	ret->is_lval=1;
 	ret->needs_deref=1;
@@ -104,8 +104,8 @@ void calculate_index_ptr(struct syntax_tree *root,struct expr_ret *ret)
 	calculate_expr(root->subtrees[0],&left);
 	calculate_expr(root->subtrees[1],&right);
 
-	deref_ptr(&left,root->line,root->col);
-	deref_ptr(&right,root->line,root->col);
+	deref_ptr(&left,root->line,root->file);
+	deref_ptr(&right,root->line,root->file);
 
 	if(right.is_const)
 	{
@@ -174,17 +174,17 @@ void calculate_index(struct syntax_tree *root,struct expr_ret *ret)
 	calculate_expr(root->subtrees[0],&left);
 	calculate_expr(root->subtrees[1],&right);
 
-	deref_ptr(&right,root->line,root->col);
+	deref_ptr(&right,root->line,root->file);
 	if(!is_basic_type(right.type)||!is_basic_decl(right.decl)||is_float_type(right.type))
 	{
-		error(root->line,root->col,"array indexes can only be integers.");
+		error(root->line,root->file,"array indexes can only be integers.");
 	}
 	if(left.needs_deref)
 	{
 		decl1=decl_next(left.decl);
 		if(!is_pointer_array(decl1))
 		{
-			error(root->line,root->col,"pointer required here.");
+			error(root->line,root->file,"pointer required here.");
 		}
 		syntax_tree_release(decl1);
 		ret->ptr_offset=left.ptr_offset;
@@ -193,7 +193,7 @@ void calculate_index(struct syntax_tree *root,struct expr_ret *ret)
 	{
 		if(!is_pointer_array(left.decl))
 		{
-			error(root->line,root->col,"pointer required here.");
+			error(root->line,root->file,"pointer required here.");
 		}
 	}
 

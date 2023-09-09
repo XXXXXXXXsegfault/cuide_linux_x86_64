@@ -12,7 +12,7 @@ struct syntax_tree *parse_id(void)
 	{
 		if(!iskeyw(cstr))
 		{
-			ret=mkst("Identifier",cstr,line,col);
+			ret=mkst("Identifier",cstr,line,file);
 			next();
 		}
 	}
@@ -53,11 +53,11 @@ struct syntax_tree *parse_num_id(void)
 		}
 		if(s)
 		{
-			ret=mkst("FConstant",cstr,line,col);
+			ret=mkst("FConstant",cstr,line,file);
 		}
 		else
 		{
-			ret=mkst("Constant",cstr,line,col);
+			ret=mkst("Constant",cstr,line,file);
 		}
 		next();
 	}
@@ -65,7 +65,7 @@ struct syntax_tree *parse_num_id(void)
 	{
 		if(!iskeyw(cstr))
 		{
-			ret=mkst("Identifier",cstr,line,col);
+			ret=mkst("Identifier",cstr,line,file);
 			next();
 		}
 	}
@@ -106,12 +106,12 @@ struct syntax_tree *parse_expr_15(void)
 	}
 	while(!strcmp(cstr,","))
 	{
-		node2=mkst(",",0,line,col);
+		node2=mkst(",",0,line,file);
 		next();
 		node=parse_expr_14();
 		if(!node)
 		{
-			error(line,col,"expected expression after \',\'.");
+			error(line,file,"expected expression after \',\'.");
 		}
 		st_add_subtree(node2,ret);
 		st_add_subtree(node2,node);
@@ -135,7 +135,7 @@ struct syntax_tree *parse_expr_14(void)
 	end=&ret;
 	while(op=str_list_match(expr_14_ops,cstr))
 	{
-		node2=mkst(op,0,line,col);
+		node2=mkst(op,0,line,file);
 		next();
 		st_add_subtree(node2,*end);
 		node=parse_expr_13();
@@ -144,7 +144,7 @@ struct syntax_tree *parse_expr_14(void)
 			msg=xstrdup("expected expression after \'");
 			msg=str_s_app(msg,op);
 			msg=str_s_app(msg,"\'.");
-			error(line,col,msg);
+			error(line,file,msg);
 		}
 		st_add_subtree(node2,node);
 		*end=node2;
@@ -166,24 +166,24 @@ struct syntax_tree *parse_expr_13(void)
 	end=&ret;
 	while(!strcmp(cstr,"\?"))
 	{
-		node2=mkst("?:",0,line,col);
+		node2=mkst("?:",0,line,file);
 		next();
 		st_add_subtree(node2,*end);
 		node=parse_expr_15();
 		if(node==0)
 		{
-			error(line,col,"expected expression after \'\?\'.");
+			error(line,file,"expected expression after \'\?\'.");
 		}
 		st_add_subtree(node2,node);
 		if(strcmp(cstr,":"))
 		{
-			error(line,col,"expected \':\' after \'\?\'.");
+			error(line,file,"expected \':\' after \'\?\'.");
 		}
 		next();
 		node=parse_expr_12();
 		if(node==0)
 		{
-			error(line,col,"expected expression after \':\'.");
+			error(line,file,"expected expression after \':\'.");
 		}
 		st_add_subtree(node2,node);
 		*end=node2;
@@ -204,12 +204,12 @@ struct syntax_tree *parse_expr_12(void)
 	}
 	while(!strcmp(cstr,"||"))
 	{
-		node2=mkst("||",0,line,col);
+		node2=mkst("||",0,line,file);
 		next();
 		node=parse_expr_11();
 		if(!node)
 		{
-			error(line,col,"expected expression after \'||\'.");
+			error(line,file,"expected expression after \'||\'.");
 		}
 		st_add_subtree(node2,ret);
 		st_add_subtree(node2,node);
@@ -230,12 +230,12 @@ struct syntax_tree *parse_expr_11(void)
 	}
 	while(!strcmp(cstr,"&&"))
 	{
-		node2=mkst("&&",0,line,col);
+		node2=mkst("&&",0,line,file);
 		next();
 		node=parse_expr_10();
 		if(!node)
 		{
-			error(line,col,"expected expression after \'&&\'.");
+			error(line,file,"expected expression after \'&&\'.");
 		}
 		st_add_subtree(node2,ret);
 		st_add_subtree(node2,node);
@@ -256,12 +256,12 @@ struct syntax_tree *parse_expr_10(void)
 	}
 	while(!strcmp(cstr,"|"))
 	{
-		node2=mkst("|",0,line,col);
+		node2=mkst("|",0,line,file);
 		next();
 		node=parse_expr_9();
 		if(!node)
 		{
-			error(line,col,"expected expression after \'|\'.");
+			error(line,file,"expected expression after \'|\'.");
 		}
 		st_add_subtree(node2,ret);
 		st_add_subtree(node2,node);
@@ -282,12 +282,12 @@ struct syntax_tree *parse_expr_9(void)
 	}
 	while(!strcmp(cstr,"^"))
 	{
-		node2=mkst("^",0,line,col);
+		node2=mkst("^",0,line,file);
 		next();
 		node=parse_expr_8();
 		if(!node)
 		{
-			error(line,col,"expected expression after \'^\'.");
+			error(line,file,"expected expression after \'^\'.");
 		}
 		st_add_subtree(node2,ret);
 		st_add_subtree(node2,node);
@@ -308,12 +308,12 @@ struct syntax_tree *parse_expr_8(void)
 	}
 	while(!strcmp(cstr,"&"))
 	{
-		node2=mkst("&",0,line,col);
+		node2=mkst("&",0,line,file);
 		next();
 		node=parse_expr_7();
 		if(!node)
 		{
-			error(line,col,"expected expression after \'&\'.");
+			error(line,file,"expected expression after \'&\'.");
 		}
 		st_add_subtree(node2,ret);
 		st_add_subtree(node2,node);
@@ -336,7 +336,7 @@ struct syntax_tree *parse_expr_7(void)
 	}
 	while(op=str_list_match(expr_7_ops,cstr))
 	{
-		node2=mkst(op,0,line,col);
+		node2=mkst(op,0,line,file);
 		next();
 		node=parse_expr_6();
 		if(!node)
@@ -344,7 +344,7 @@ struct syntax_tree *parse_expr_7(void)
 			msg=xstrdup("expected expression after \'");
 			msg=str_s_app(msg,op);
 			msg=str_s_app(msg,"\'.");
-			error(line,col,msg);
+			error(line,file,msg);
 		}
 		st_add_subtree(node2,ret);
 		st_add_subtree(node2,node);
@@ -367,7 +367,7 @@ struct syntax_tree *parse_expr_6(void)
 	}
 	while(op=str_list_match(expr_6_ops,cstr))
 	{
-		node2=mkst(op,0,line,col);
+		node2=mkst(op,0,line,file);
 		next();
 		node=parse_expr_5();
 		if(!node)
@@ -375,7 +375,7 @@ struct syntax_tree *parse_expr_6(void)
 			msg=xstrdup("expected expression after \'");
 			msg=str_s_app(msg,op);
 			msg=str_s_app(msg,"\'.");
-			error(line,col,msg);
+			error(line,file,msg);
 		}
 		st_add_subtree(node2,ret);
 		st_add_subtree(node2,node);
@@ -398,7 +398,7 @@ struct syntax_tree *parse_expr_5(void)
 	}
 	while(op=str_list_match(expr_5_ops,cstr))
 	{
-		node2=mkst(op,0,line,col);
+		node2=mkst(op,0,line,file);
 		next();
 		node=parse_expr_4();
 		if(!node)
@@ -406,7 +406,7 @@ struct syntax_tree *parse_expr_5(void)
 			msg=xstrdup("expected expression after \'");
 			msg=str_s_app(msg,op);
 			msg=str_s_app(msg,"\'.");
-			error(line,col,msg);
+			error(line,file,msg);
 		}
 		st_add_subtree(node2,ret);
 		st_add_subtree(node2,node);
@@ -429,7 +429,7 @@ struct syntax_tree *parse_expr_4(void)
 	}
 	while(op=str_list_match(expr_4_ops,cstr))
 	{
-		node2=mkst(op,0,line,col);
+		node2=mkst(op,0,line,file);
 		next();
 		node=parse_expr_3();
 		if(!node)
@@ -437,7 +437,7 @@ struct syntax_tree *parse_expr_4(void)
 			msg=xstrdup("expected expression after \'");
 			msg=str_s_app(msg,op);
 			msg=str_s_app(msg,"\'.");
-			error(line,col,msg);
+			error(line,file,msg);
 		}
 		st_add_subtree(node2,ret);
 		st_add_subtree(node2,node);
@@ -460,7 +460,7 @@ struct syntax_tree *parse_expr_3(void)
 	}
 	while(op=str_list_match(expr_3_ops,cstr))
 	{
-		node2=mkst(op,0,line,col);
+		node2=mkst(op,0,line,file);
 		next();
 		node=parse_expr_2();
 		if(!node)
@@ -468,7 +468,7 @@ struct syntax_tree *parse_expr_3(void)
 			msg=xstrdup("expected expression after \'");
 			msg=str_s_app(msg,op);
 			msg=str_s_app(msg,"\'.");
-			error(line,col,msg);
+			error(line,file,msg);
 		}
 		st_add_subtree(node2,ret);
 		st_add_subtree(node2,node);
@@ -483,7 +483,7 @@ struct syntax_tree *parse_sizeof_type(void)
 	struct syntax_tree *node,*ret;
 	oldword=current;
 	l=line;
-	c=col;
+	c=file;
 	if(strcmp(cstr,"sizeof"))
 	{
 		return 0;
@@ -506,11 +506,11 @@ struct syntax_tree *parse_sizeof_type(void)
 	node=parse_decl();
 	if(node==0)
 	{
-		error(line,col,"invalid declaration.");
+		error(line,file,"invalid declaration.");
 	}
 	if(strcmp(cstr,")"))
 	{
-		error(line,col,"expected \')\' after declaration.");
+		error(line,file,"expected \')\' after declaration.");
 	}
 	next();
 	st_add_subtree(ret,node);
@@ -523,7 +523,7 @@ struct syntax_tree *parse_cast(void)
 	struct syntax_tree *node,*ret;
 	oldword=current;
 	l=line;
-	c=col;
+	c=file;
 	if(strcmp(cstr,"("))
 	{
 		resume();
@@ -541,11 +541,11 @@ struct syntax_tree *parse_cast(void)
 	node=parse_decl();
 	if(node==0)
 	{
-		error(line,col,"invalid declaration.");
+		error(line,file,"invalid declaration.");
 	}
 	if(strcmp(cstr,")"))
 	{
-		error(line,col,"expected \')\' after declaration.");
+		error(line,file,"expected \')\' after declaration.");
 	}
 	next();
 	st_add_subtree(ret,node);
@@ -576,7 +576,7 @@ struct syntax_tree *parse_expr_2(void)
 		{
 			op="addr";
 		}
-		ret=mkst(op,0,line,col);
+		ret=mkst(op,0,line,file);
 		next();
 		node=parse_expr_2();
 		if(!node)
@@ -584,7 +584,7 @@ struct syntax_tree *parse_expr_2(void)
 			msg=xstrdup("expected expression after \'");
 			msg=str_s_app(msg,op);
 			msg=str_s_app(msg,"\'.");
-			error(line,col,msg);
+			error(line,file,msg);
 		}
 		st_add_subtree(ret,node);
 	}
@@ -593,7 +593,7 @@ struct syntax_tree *parse_expr_2(void)
 		node=parse_expr_2();
 		if(!node)
 		{
-			error(line,col,"expected expression after \')\'.");
+			error(line,file,"expected expression after \')\'.");
 		}
 		st_add_subtree(ret,node);
 	}
@@ -618,17 +618,17 @@ struct syntax_tree *parse_call(void)
 		node=parse_expr_14();
 		if(node==0)
 		{
-			ret=mkst("call_noarg",0,line,col);
+			ret=mkst("call_noarg",0,line,file);
 			if(strcmp(cstr,")"))
 			{
-				error(line,col,"expected \')\' after \'(\'.");
+				error(line,file,"expected \')\' after \'(\'.");
 			}
 			next();
 			st_add_subtree(ret,0);
 		}
 		else
 		{
-			ret=mkst("call",0,line,col);
+			ret=mkst("call",0,line,file);
 			st_add_subtree(ret,0);
 			st_add_subtree(ret,node);
 			while(!strcmp(cstr,","))
@@ -637,13 +637,13 @@ struct syntax_tree *parse_call(void)
 				node=parse_expr_14();
 				if(node==0)
 				{
-					error(line,col,"expected expression after \',\'.");
+					error(line,file,"expected expression after \',\'.");
 				}
 				st_add_subtree(ret,node);
 			}
 			if(strcmp(cstr,")"))
 			{
-				error(line,col,"expected \')\' after \'(\'.");
+				error(line,file,"expected \')\' after \'(\'.");
 			}
 			next();
 		}
@@ -656,16 +656,16 @@ struct syntax_tree *parse_expr_1_suffix(void)
 	ret=0;
 	if(!strcmp(cstr,"["))
 	{
-		ret=mkst("[]",0,line,col);
+		ret=mkst("[]",0,line,file);
 		next();
 		node=parse_expr_15();
 		if(node==0)
 		{
-			error(line,col,"expected expression after \'(\'.");
+			error(line,file,"expected expression after \'(\'.");
 		}
 		if(strcmp(cstr,"]"))
 		{
-			error(line,col,"expected \']\' after \'[\'.");
+			error(line,file,"expected \']\' after \'[\'.");
 		}
 		next();
 		st_add_subtree(ret,0);
@@ -677,24 +677,24 @@ struct syntax_tree *parse_expr_1_suffix(void)
 	}
 	else if(!strcmp(cstr,"."))
 	{
-		ret=mkst(".",0,line,col);
+		ret=mkst(".",0,line,file);
 		next();
 		node=parse_id();
 		if(!node)
 		{
-			error(line,col,"expected member name after \'.\'.");
+			error(line,file,"expected member name after \'.\'.");
 		}
 		st_add_subtree(ret,0);
 		st_add_subtree(ret,node);
 	}
 	else if(!strcmp(cstr,"->"))
 	{
-		ret=mkst("->",0,line,col);
+		ret=mkst("->",0,line,file);
 		next();
 		node=parse_id();
 		if(!node)
 		{
-			error(line,col,"expected member name after \'->\'.");
+			error(line,file,"expected member name after \'->\'.");
 		}
 		st_add_subtree(ret,0);
 		st_add_subtree(ret,node);
@@ -710,11 +710,11 @@ struct syntax_tree *parse_expr_1(void)
 		ret=parse_expr_15();
 		if(ret==0)
 		{
-			error(line,col,"expected expression after \'(\'.");
+			error(line,file,"expected expression after \'(\'.");
 		}
 		if(strcmp(cstr,")"))
 		{
-			error(line,col,"expected \')\' after \'(\'.");
+			error(line,file,"expected \')\' after \'(\'.");
 		}
 		next();
 	}
@@ -736,9 +736,9 @@ struct syntax_tree *parse_expr(void)
 	{
 		if(strcmp(cstr,";"))
 		{
-			error(line,col,"expected \';\' after expression.");
+			error(line,file,"expected \';\' after expression.");
 		}
-		ret=mkst("expr",0,line,col);
+		ret=mkst("expr",0,line,file);
 		next();
 		st_add_subtree(ret,node);
 		return ret;

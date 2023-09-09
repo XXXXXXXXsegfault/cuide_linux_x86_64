@@ -3,6 +3,7 @@ int l_current_line;
 int l_current_col;
 int l_old_line;
 int l_old_col;
+char *current_file;
 int l_readc(void)
 {
 	static unsigned char buf[65536];
@@ -30,32 +31,10 @@ int l_getc(void)
 	{
 		c=l_ungetc_buf;
 		l_ungetc_buf=-1;
-		l_old_line=l_current_line;
-		l_old_col=l_current_col;
-		if(c=='\n')
-		{
-			++l_current_line;
-			l_current_col=1;
-		}
-		else
-		{
-			++l_current_col;
-		}
 		return c;
 	}
 	if((c=l_readc())!=-1)
 	{
-		l_old_line=l_current_line;
-		l_old_col=l_current_col;
-		if(c=='\n')
-		{
-			++l_current_line;
-			l_current_col=1;
-		}
-		else
-		{
-			++l_current_col;
-		}
 		return c;
 	}
 	else
@@ -66,8 +45,6 @@ int l_getc(void)
 void l_ungetc(int c)
 {
 	l_ungetc_buf=c&0xff;
-	l_current_line=l_old_line;
-	l_current_col=l_old_col;
 }
 char *read_str(char c)
 {
@@ -98,13 +75,13 @@ char *read_str(char c)
 		}
 		else if(c1=='\n'||c1=='\r')
 		{
-			error(line,col,"string not complete.");
+			error(line,current_file,"string not complete.");
 		}
 		++x;
 	}
 	if(c1==-1)
 	{
-		error(line,col,"string not complete.");
+		error(line,current_file,"string not complete.");
 	}
 	return s;
 }
@@ -313,42 +290,68 @@ char *l_read_word(void)
 		msg=xstrdup("unrecognized character \'");
 		msg=str_c_app(msg,c);
 		msg=str_c_app(msg,'\'');
-		error(line,col,msg);
+		error(line,current_file,msg);
 	}
 	return s;
 }
 struct l_word_list
 {
 	char *str;
+	char *file;
 	int line;
 	int col;
 	struct l_word_list *next;
 } *l_words_head,*l_words_end;
 void load_file(void)
 {
-	char *s;
+	char *s,*s1,*p;
 	struct l_word_list *node;
-	int line,col;
+	long int line,col;
+	int line_num_state;
+	current_file=xstrdup("<UNKNOWN>");
 	line=l_current_line;
 	col=l_current_col;
+	line_num_state=0;
 	while(s=l_read_word())
 	{
-		node=xmalloc(sizeof(*node));
-		node->str=s;
-		node->line=line;
-		node->col=col;
-		node->next=0;
-		if(l_words_head)
+		if(!strcmp(s,"__line__"))
 		{
-			l_words_end->next=node;
+			line_num_state=1;
+			s1=0;
+			free(s);
+		}
+		else if(line_num_state==1)
+		{
+			current_file=s;
+			line_num_state=2;
+		}
+		else if(line_num_state==2)
+		{
+			sinputi(s,&line);
+			l_current_line=line;
+			line_num_state=0;
+			free(s);
 		}
 		else
 		{
-			l_words_head=node;
+			node=xmalloc(sizeof(*node));
+			node->str=s;
+			node->file=current_file;
+			node->line=line;
+			node->col=col;
+			node->next=0;
+			if(l_words_head)
+			{
+				l_words_end->next=node;
+			}
+			else
+			{
+				l_words_head=node;
+			}
+			l_words_end=node;
+			line=l_current_line;
+			col=l_current_col;
 		}
-		l_words_end=node;
-		line=l_current_line;
-		col=l_current_col;
 	}
 }
 void l_global_init(void)

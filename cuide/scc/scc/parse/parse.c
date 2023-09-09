@@ -2,12 +2,12 @@ struct syntax_tree
 {
 	char *name;
 	char *value;
+	char *file;
 	long int line;
-	long int col;
 	long int count_subtrees;
 	struct syntax_tree **subtrees;
 };
-struct syntax_tree *mkst(char *name,char *value,long int line,long int col)
+struct syntax_tree *mkst(char *name,char *value,long int line,char *file)
 {
 	struct syntax_tree *node;
 	node=xmalloc(sizeof(*node));
@@ -23,7 +23,7 @@ struct syntax_tree *mkst(char *name,char *value,long int line,long int col)
 	node->count_subtrees=0;
 	node->subtrees=0;
 	node->line=line;
-	node->col=col;
+	node->file=file;
 	return node;
 }
 void st_add_subtree(struct syntax_tree *st,struct syntax_tree *subtree)
@@ -55,7 +55,7 @@ void syntax_tree_release(struct syntax_tree *root)
 }
 struct l_word_list *p_current_word;
 long int p_current_line;
-long int p_current_col;
+long int p_current_file;
 void parse_next(void)
 {
 	if(p_current_word==0)
@@ -68,7 +68,7 @@ void parse_next(void)
 		return;
 	}
 	p_current_line=p_current_word->line;
-	p_current_col=p_current_word->col;
+	p_current_file=p_current_word->file;
 }
 char *keyw_list[27];
 int iskeyw(char *str)
@@ -124,9 +124,21 @@ char *parse_cstr(void)
 #define current p_current_word
 #define cstr parse_cstr()
 #define line p_current_line
-#define col p_current_col
+#define file p_current_file
 #define next parse_next
 #define resume() p_current_word=oldword
+void skip_asm(void)
+{
+	while(!strcmp(cstr,"asm"))
+	{
+		next();
+		if(*cstr!='\"')
+		{
+			break;
+		}
+		next();
+	}
+}
 
 #include "expr.c"
 #include "type.c"
@@ -135,7 +147,7 @@ char *parse_cstr(void)
 struct syntax_tree *parse_file(void)
 {
 	struct syntax_tree *ret,*node;
-	ret=mkst("file",0,line,col);
+	ret=mkst("file",0,line,file);
 	while(1)
 	{
 		if(node=parse_fundef())
@@ -161,13 +173,13 @@ struct syntax_tree *parse_file(void)
 #undef current
 #undef cstr
 #undef line
-#undef col
+#undef file
 #undef next
 #undef resume
 void parse_global_init(void)
 {
 	p_current_line=1;
-	p_current_col=1;
+	p_current_file="<UNKNOWN>";
 	keyw_list[0]="break";
 	keyw_list[1]="char";
 	keyw_list[2]="do";

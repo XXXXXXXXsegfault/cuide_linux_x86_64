@@ -5,8 +5,8 @@ void calculate_branch(struct syntax_tree *root,struct expr_ret *ret)
 	struct branch_args args;
 	control_label_push();
 	new_name=mktmpname();
-	type=mkst("u64",0,root->line,root->col);
-	decl=mkst("Identifier",new_name,root->line,root->col);
+	type=mkst("u64",0,root->line,root->file);
+	decl=mkst("Identifier",new_name,root->line,root->file);
 	add_decl(type,decl,0,0,0,1);
 	args.ltrue=-1;
 	args.lfalse=t_env.label->l2;
@@ -36,8 +36,8 @@ void calculate_relop(struct syntax_tree *root,struct expr_ret *ret,char *ins)
 	char *new_name;
 	calculate_expr(root->subtrees[0],&left);
 	calculate_expr(root->subtrees[1],&right);
-	deref_ptr(&left,root->line,root->col);
-	deref_ptr(&right,root->line,root->col);
+	deref_ptr(&left,root->line,root->file);
+	deref_ptr(&right,root->line,root->file);
 	if(left.is_const&&right.is_const)
 	{
 		ret->value=1;
@@ -86,21 +86,21 @@ void calculate_relop(struct syntax_tree *root,struct expr_ret *ret,char *ins)
 		ret->is_const=1;
 		ret->is_lval=0;
 		ret->needs_deref=0;
-		ret->type=mkst("u64",0,root->line,root->col);
-		ret->decl=mkst("Identifier","<NULL>",root->line,root->col);
+		ret->type=mkst("u64",0,root->line,root->file);
+		ret->decl=mkst("Identifier","<NULL>",root->line,root->file);
 		expr_ret_release(&left);
 		expr_ret_release(&right);
 		return;
 	}
 	new_name=mktmpname();
-	type=mkst("u64",0,root->line,root->col);
-	decl=mkst("Identifier",new_name,root->line,root->col);
+	type=mkst("u64",0,root->line,root->file);
+	decl=mkst("Identifier",new_name,root->line,root->file);
 	add_decl(type,decl,0,0,0,1);
 	if(!left.is_const&&!right.is_const)
 	{
 		if(if_type_compat(left.type,left.decl,right.type,right.decl,0))
 		{
-			error(root->line,root->col,"incompatible type.");
+			error(root->line,root->file,"incompatible type.");
 		}
 	}
 	control_label_push();
@@ -166,7 +166,7 @@ void calculate_lnot(struct syntax_tree *root,struct expr_ret *ret)
 	struct syntax_tree *type,*decl;
 	char *new_name;
 	calculate_expr(root->subtrees[0],&result);
-	deref_ptr(&result,root->line,root->col);
+	deref_ptr(&result,root->line,root->file);
 	if(result.is_const)
 	{
 		ret->value=1;
@@ -177,14 +177,14 @@ void calculate_lnot(struct syntax_tree *root,struct expr_ret *ret)
 		ret->is_const=1;
 		ret->is_lval=0;
 		ret->needs_deref=0;
-		ret->type=mkst("u64",0,root->line,root->col);
-		ret->decl=mkst("Identifier","<NULL>",root->line,root->col);
+		ret->type=mkst("u64",0,root->line,root->file);
+		ret->decl=mkst("Identifier","<NULL>",root->line,root->file);
 	}
 	else
 	{
 		new_name=mktmpname();
-		type=mkst("u64",0,root->line,root->col);
-		decl=mkst("Identifier",new_name,root->line,root->col);
+		type=mkst("u64",0,root->line,root->file);
+		decl=mkst("Identifier",new_name,root->line,root->file);
 		add_decl(type,decl,0,0,0,1);
 
 		control_label_push();
@@ -230,7 +230,7 @@ void calculate_land(struct syntax_tree *root,struct expr_ret *ret)
 	struct syntax_tree *type,*decl;
 	char *new_name;
 	calculate_expr(root->subtrees[0],&left);
-	deref_ptr(&left,root->line,root->col);
+	deref_ptr(&left,root->line,root->file);
 	if(left.is_const)
 	{
 		if(left.value==0)
@@ -239,16 +239,16 @@ void calculate_land(struct syntax_tree *root,struct expr_ret *ret)
 			ret->is_const=1;
 			ret->is_lval=0;
 			ret->needs_deref=0;
-			ret->type=mkst("u64",0,root->line,root->col);
-			ret->decl=mkst("Identifier","<NULL>",root->line,root->col);
+			ret->type=mkst("u64",0,root->line,root->file);
+			ret->decl=mkst("Identifier","<NULL>",root->line,root->file);
 			expr_ret_release(&left);
 			return;
 		}
 	}
 
 	new_name=mktmpname();
-	type=mkst("u64",0,root->line,root->col);
-	decl=mkst("Identifier",new_name,root->line,root->col);
+	type=mkst("u64",0,root->line,root->file);
+	decl=mkst("Identifier",new_name,root->line,root->file);
 	add_decl(type,decl,0,0,0,1);
 
 	c_write("mov ",4);
@@ -270,7 +270,7 @@ void calculate_land(struct syntax_tree *root,struct expr_ret *ret)
 
 
 	calculate_expr(root->subtrees[1],&right);
-	deref_ptr(&right,root->line,root->col);
+	deref_ptr(&right,root->line,root->file);
 	if(!right.is_const||right.value!=0)
 	{
 
@@ -318,7 +318,7 @@ void calculate_lor(struct syntax_tree *root,struct expr_ret *ret)
 	struct syntax_tree *type,*decl;
 	char *new_name;
 	calculate_expr(root->subtrees[0],&left);
-	deref_ptr(&left,root->line,root->col);
+	deref_ptr(&left,root->line,root->file);
 	if(left.is_const)
 	{
 		if(left.value!=0)
@@ -327,16 +327,16 @@ void calculate_lor(struct syntax_tree *root,struct expr_ret *ret)
 			ret->is_const=1;
 			ret->is_lval=0;
 			ret->needs_deref=0;
-			ret->type=mkst("u64",0,root->line,root->col);
-			ret->decl=mkst("Identifier","<NULL>",root->line,root->col);
+			ret->type=mkst("u64",0,root->line,root->file);
+			ret->decl=mkst("Identifier","<NULL>",root->line,root->file);
 			expr_ret_release(&left);
 			return;
 		}
 	}
 
 	new_name=mktmpname();
-	type=mkst("u64",0,root->line,root->col);
-	decl=mkst("Identifier",new_name,root->line,root->col);
+	type=mkst("u64",0,root->line,root->file);
+	decl=mkst("Identifier",new_name,root->line,root->file);
 	add_decl(type,decl,0,0,0,1);
 
 	c_write("mov ",4);
@@ -358,7 +358,7 @@ void calculate_lor(struct syntax_tree *root,struct expr_ret *ret)
 
 
 	calculate_expr(root->subtrees[1],&right);
-	deref_ptr(&right,root->line,root->col);
+	deref_ptr(&right,root->line,root->file);
 	if(!right.is_const||right.value==0)
 	{
 

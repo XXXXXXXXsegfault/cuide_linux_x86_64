@@ -8,7 +8,7 @@ struct syntax_tree *parse_id_null(void)
 	{
 		return ret;
 	}
-	return mkst("Identifier","<NULL>",line,col);
+	return mkst("Identifier","<NULL>",line,file);
 }
 struct syntax_tree *parse_basic_type(void)
 {
@@ -16,7 +16,7 @@ struct syntax_tree *parse_basic_type(void)
 	int x;
 	long int l,c;
 	l=line;
-	c=col;
+	c=file;
 	t[0]=0;
 	t[1]=0;
 	t[2]=0;
@@ -37,17 +37,17 @@ struct syntax_tree *parse_basic_type(void)
 	}
 	if(t[0]>1||t[1]>1||t[2]>1||t[3]>2||t[4]>1||t[5]>1)
 	{
-		error(line,col,"invalid type.");
+		error(line,file,"invalid type.");
 	}
 	if(t[0]+t[1]>1||t[4]+t[5]>1||t[2]&&t[3])
 	{
-		error(line,col,"invalid type.");
+		error(line,file,"invalid type.");
 	}
 	if(t[6]||t[7])
 	{
 		if(t[6]+t[7]>1||t[0]||t[1]||t[2]||t[3]||t[4]||t[5])
 		{
-			error(line,col,"invalid type.");
+			error(line,file,"invalid type.");
 		}
 		if(t[6])
 		{
@@ -114,12 +114,12 @@ struct syntax_tree *parse_struct_union_type(void)
 	oldword=current;
 	if(!strcmp(cstr,"struct"))
 	{
-		ret=mkst("struct",0,line,col);
+		ret=mkst("struct",0,line,file);
 		next();
 	}
 	else if(!strcmp(cstr,"union"))
 	{
-		ret=mkst("union",0,line,col);
+		ret=mkst("union",0,line,file);
 		next();
 	}
 	else
@@ -139,18 +139,18 @@ struct syntax_tree *parse_struct_union_type(void)
 		node=parse_decl();
 		if(node==0)
 		{
-			error(line,col,"invalid declaration.\n");
+			error(line,file,"invalid declaration.\n");
 		}
 		st_add_subtree(ret,node);
 		if(strcmp(cstr,";"))
 		{
-			error(line,col,"expected \';\' after declaration.\n");
+			error(line,file,"expected \';\' after declaration.\n");
 		}
 		next();
 	}
 	if(strcmp(cstr,"}"))
 	{
-		error(line,col,"expected \'}\' after member list.\n");
+		error(line,file,"expected \'}\' after member list.\n");
 	}
 	next();
 	return ret;
@@ -170,7 +170,7 @@ struct syntax_tree *parse_decl_array(void)
 	struct syntax_tree *ret,*node;
 	long int l,c;
 	l=line;
-	c=col;
+	c=file;
 	if(strcmp(cstr,"["))
 	{
 		return 0;
@@ -185,11 +185,11 @@ struct syntax_tree *parse_decl_array(void)
 	}
 	if((node=parse_expr_15())==0)
 	{
-		error(line,col,"expected \']\' or expression after \'[\'.");
+		error(line,file,"expected \']\' or expression after \'[\'.");
 	}
 	if(strcmp(cstr,"]"))
 	{
-		error(line,col,"expected \']\' after expression.");
+		error(line,file,"expected \']\' after expression.");
 	}
 	next();
 	ret=mkst("array",0,l,c);
@@ -202,7 +202,7 @@ struct syntax_tree *parse_decl_arglist(void)
 	struct l_word_list *oldword;
 	struct syntax_tree *ret,*node;
 	oldword=current;
-	ret=mkst("function",0,line,col);
+	ret=mkst("function",0,line,file);
 	st_add_subtree(ret,0);
 	if(!strcmp(cstr,")"))
 	{
@@ -222,13 +222,13 @@ struct syntax_tree *parse_decl_arglist(void)
 		node=parse_type();
 		if(!node)
 		{
-			error(line,col,"invalid declaration type.");
+			error(line,file,"invalid declaration type.");
 		}
 		st_add_subtree(ret,node);
 		node=parse_decl();
 		if(!node)
 		{
-			error(line,col,"invalid declaration.");
+			error(line,file,"invalid declaration.");
 		}
 		st_add_subtree(ret,node);
 		if(strcmp(cstr,","))
@@ -250,7 +250,7 @@ struct syntax_tree *parse_decl_function(void)
 	ret=parse_decl_arglist();
 	if(strcmp(cstr,")"))
 	{
-		error(line,col,"expected \')\' after argument list.");
+		error(line,file,"expected \')\' after argument list.");
 	}
 	next();
 	return ret;
@@ -271,7 +271,7 @@ struct syntax_tree *parse_decl_pointer(void)
 		resume();
 		return 0;
 	}
-	ret=mkst("pointer",0,line,col);
+	ret=mkst("pointer",0,line,file);
 	st_add_subtree(ret,node);
 	return ret;
 }
@@ -295,7 +295,7 @@ struct syntax_tree *parse_decl(void)
 		}
 		if(strcmp(cstr,")"))
 		{
-			error(line,col,"expected \')\' after \'(\'.");
+			error(line,file,"expected \')\' after \'(\'.");
 		}
 		next();
 	}

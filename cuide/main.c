@@ -6,6 +6,7 @@
 #include "include/stat.c"
 #include "include/path.c"
 #include "include/dirent.c"
+#include "include/ptrace.c"
 
 #include "tmp/include_cpio.c"
 
@@ -223,6 +224,7 @@ namespace assembler;
 #include "scc/include/lib.c"
 #include "scc/asm/main.c"
 namespace;
+#include "catch.c"
 
 int exec_cmd(char *s,int size)
 {
@@ -275,7 +277,6 @@ int exec_cmd(char *s,int size)
 			}
 			signal(SIGINT,SIG_DFL);
 			signal(SIGQUIT,SIG_DFL);
-			signal(SIGTSTP,SIG_DFL);
 			unblock_sigwinch();
 			exit(scpp__main(x,arg));
 		}
@@ -305,7 +306,6 @@ int exec_cmd(char *s,int size)
 			}
 			signal(SIGINT,SIG_DFL);
 			signal(SIGQUIT,SIG_DFL);
-			signal(SIGTSTP,SIG_DFL);
 			unblock_sigwinch();
 			exit(scc__main(x,arg));
 		}
@@ -335,9 +335,37 @@ int exec_cmd(char *s,int size)
 			}
 			signal(SIGINT,SIG_DFL);
 			signal(SIGQUIT,SIG_DFL);
-			signal(SIGTSTP,SIG_DFL);
 			unblock_sigwinch();
 			exit(assembler__main(x,arg));
+		}
+		else if(pid>0)
+		{
+			waitpid(pid,&ret,0);
+			ioctl(0,TCSETS,&term);
+		}
+		else
+		{
+			ioctl(0,TCSETS,&term);
+			return 1;
+		}
+		return ret;
+	}
+	if(!strcmp(arg[0],"catch"))
+	{
+		int pid;
+		int ret;
+		ioctl(0,TCSETS,&old_term);
+		pid=fork();
+		if(pid==0)
+		{
+			if(fchdir(project_dir_fd))
+			{
+				exit(1);
+			}
+			signal(SIGINT,SIG_DFL);
+			signal(SIGQUIT,SIG_DFL);
+			unblock_sigwinch();
+			exit(catch_run(x,arg));
 		}
 		else if(pid>0)
 		{
@@ -365,7 +393,6 @@ int exec_cmd(char *s,int size)
 			}
 			signal(SIGINT,SIG_DFL);
 			signal(SIGQUIT,SIG_DFL);
-			signal(SIGTSTP,SIG_DFL);
 			unblock_sigwinch();
 
 			int ret,x1;
@@ -419,7 +446,6 @@ int exec_cmd(char *s,int size)
 			}
 			signal(SIGINT,SIG_DFL);
 			signal(SIGQUIT,SIG_DFL);
-			signal(SIGTSTP,SIG_DFL);
 			unblock_sigwinch();
 
 			if(x<3)
@@ -467,7 +493,6 @@ int exec_cmd(char *s,int size)
 			}
 			signal(SIGINT,SIG_DFL);
 			signal(SIGQUIT,SIG_DFL);
-			signal(SIGTSTP,SIG_DFL);
 			unblock_sigwinch();
 
 			int x1;
@@ -508,7 +533,6 @@ int exec_cmd(char *s,int size)
 		}
 		signal(SIGINT,SIG_DFL);
 		signal(SIGQUIT,SIG_DFL);
-		signal(SIGTSTP,SIG_DFL);
 		unblock_sigwinch();
 		execv(arg[0],arg);
 		exit(1);
@@ -785,14 +809,26 @@ int main(int argc,char **argv)
 	int c;
 	if(argc<2)
 	{
-		write(1,"Usage: cuide <ProjectDirectory>\n",32);
-		write(1,"If <ProjectDirectory> does not exist, a new project will be created.\n",69);
+		write(1,"Usage: cuide <ExistingProjectPath>\n",35);
+		write(1,"Usage: cuide <NewEmptyProjectPath> empty\n",41);
+		write(1,"Usage: cuide <NewSCCProjectPath> scc\n",37);
 		return 1;
 	}
-	if(init_project(argv[1]))
+	if(argc>2)
 	{
-		write(1,"Failed to initialize project.\n",30);
-		return 1;
+		if(init_project(argv[1],argv[2]))
+		{
+			write(1,"Failed to initialize project.\n",30);
+			return 1;
+		}
+	}
+	else
+	{
+		if(init_project(argv[1],NULL))
+		{
+			write(1,"Failed to initialize project.\n",30);
+			return 1;
+		}
 	}
 	project_files_load();
 	signal(SIGINT,SIG_IGN);

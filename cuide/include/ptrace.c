@@ -1,0 +1,10 @@
+#ifndef _PTRACE_C_
+#define _PTRACE_C_
+#define PTRACE_TRACEME 0
+#define PTRACE_PEEKTEXT 1
+#define PTRACE_CONT 7
+#define PTRACE_GETREGS 12
+#define PTRACE_SETOPTIONS 0x4200
+#define PTRACE_O_EXITKILL 0x100000
+
+#endif

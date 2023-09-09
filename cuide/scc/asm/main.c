@@ -1,9 +1,19 @@
 int fdi,fdo,fde;
+char *current_file;
+long int source_current_line;
 void error(int line,char *msg)
 {
 	char *str;
 	str=xstrdup("line ");
 	str=str_i_app(str,line);
+	if(current_file)
+	{
+		str=str_s_app(str," (file ");
+		str=str_s_app(str,current_file);
+		str=str_s_app(str," line ");
+		str=str_i_app(str,source_current_line);
+		str=str_s_app(str,")");
+	}
 	str=str_s_app(str,": error: ");
 	str=str_s_app(str,msg);
 	str=str_c_app(str,'\n');

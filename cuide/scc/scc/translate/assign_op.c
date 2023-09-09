@@ -10,22 +10,22 @@ void calculate_assign_op(struct syntax_tree *root,struct expr_ret *ret,char *op,
 	calculate_expr(root->subtrees[1],&right);
 	if(left.is_lval==0)
 	{
-		error(root->line,root->col,"lvalue required here.");
+		error(root->line,root->file,"lvalue required here.");
 	}
-	deref_ptr(&right,root->line,root->col);
+	deref_ptr(&right,root->line,root->file);
 	if(!is_basic_decl(right.decl))
 	{
 		msg=xstrdup("invalid operand for \'");
 		msg=str_s_app(msg,op);
 		msg=str_s_app(msg,"\'.");
-		error(root->line,root->col,msg);
+		error(root->line,root->file,msg);
 	}
 	if(is_float_type(right.type)&&strcmp(op,"*=")&&strcmp(op,"/="))
 	{
 		msg=xstrdup("invalid operand for \'");
 		msg=str_s_app(msg,op);
 		msg=str_s_app(msg,"\'.");
-		error(root->line,root->col,msg);
+		error(root->line,root->file,msg);
 	}
 	if(left.needs_deref)
 	{
@@ -38,7 +38,7 @@ void calculate_assign_op(struct syntax_tree *root,struct expr_ret *ret,char *op,
 				msg=xstrdup("invalid operand for \'");
 				msg=str_s_app(msg,op);
 				msg=str_s_app(msg,"\'.");
-				error(root->line,root->col,msg);
+				error(root->line,root->file,msg);
 			}
 			size=type_size(left.type,decl1);
 		}
@@ -47,7 +47,7 @@ void calculate_assign_op(struct syntax_tree *root,struct expr_ret *ret,char *op,
 			msg=xstrdup("invalid operand for \'");
 			msg=str_s_app(msg,op);
 			msg=str_s_app(msg,"\'.");
-			error(root->line,root->col,msg);
+			error(root->line,root->file,msg);
 		}
 		
 		new_type=syntax_tree_dup(left.type);

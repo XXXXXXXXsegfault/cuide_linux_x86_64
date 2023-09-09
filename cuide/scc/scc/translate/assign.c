@@ -8,7 +8,7 @@ void calculate_assign(struct syntax_tree *root,struct expr_ret *ret,char *op1,ch
 	calculate_expr(root->subtrees[1],&right);
 	if(left.is_lval==0||is_array_function(left.decl))
 	{
-		error(root->line,root->col,"lvalue required here.");
+		error(root->line,root->file,"lvalue required here.");
 	}
 	if(right.is_const)
 	{
@@ -16,7 +16,7 @@ void calculate_assign(struct syntax_tree *root,struct expr_ret *ret,char *op1,ch
 	}
 	else
 	{
-		deref_ptr(&right,root->line,root->col);
+		deref_ptr(&right,root->line,root->file);
 		str=xstrdup(get_decl_id(right.decl));
 	}
 	name=get_decl_id(left.decl);
@@ -25,7 +25,7 @@ void calculate_assign(struct syntax_tree *root,struct expr_ret *ret,char *op1,ch
 		decl1=decl_next(left.decl);
 		if(if_type_compat(left.type,decl1,right.type,right.decl,0))
 		{
-			error(root->line,root->col,"incompatible type.");
+			error(root->line,root->file,"incompatible type.");
 		}
 		t=get_decl_type(decl1);
 		c_write(op2,strlen(op2));
@@ -41,11 +41,11 @@ void calculate_assign(struct syntax_tree *root,struct expr_ret *ret,char *op1,ch
 		{
 			if(!strcmp(left.type->name,"struct"))
 			{
-				error(root->line,root->col,"invalid use of structure.");
+				error(root->line,root->file,"invalid use of structure.");
 			}
 			if(!strcmp(left.type->name,"union"))
 			{
-				error(root->line,root->col,"invalid use of union.");
+				error(root->line,root->file,"invalid use of union.");
 			}
 			size=type_size(left.type,decl1);
 			if(is_float_type(left.type)&&is_basic_decl(decl1))
@@ -77,12 +77,12 @@ void calculate_assign(struct syntax_tree *root,struct expr_ret *ret,char *op1,ch
 			}
 			else
 			{
-				error(root->line,root->col,"invalid assignment.");
+				error(root->line,root->file,"invalid assignment.");
 			}
 		}
 		else
 		{
-			error(root->line,root->col,"invalid assignment.");
+			error(root->line,root->file,"invalid assignment.");
 		}
 		syntax_tree_release(decl1);
 	}
@@ -90,7 +90,7 @@ void calculate_assign(struct syntax_tree *root,struct expr_ret *ret,char *op1,ch
 	{
 		if(if_type_compat(left.type,left.decl,right.type,right.decl,0))
 		{
-			error(root->line,root->col,"incompatible type.");
+			error(root->line,root->file,"incompatible type.");
 		}
 		c_write(op1,strlen(op1));
 		c_write(" ",1);

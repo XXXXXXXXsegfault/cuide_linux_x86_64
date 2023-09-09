@@ -1,4 +1,4 @@
-int init_project(char *dir)
+int init_project(char *dir,char *new_project_type)
 {
 	int ret;
 	int fd;
@@ -7,6 +7,10 @@ int init_project(char *dir)
 	ret=stat(dir,&st);
 	if(ret==-2)
 	{
+		if(new_project_type==NULL)
+		{
+			return 1;
+		}
 		mkdir(dir,0755);
 		project_dir_fd=open(dir,0,0);
 		if(project_dir_fd<0)
@@ -21,24 +25,48 @@ int init_project(char *dir)
 		write(fd,"# Write your build commands here.\n",34);
 		write(fd,"# Internal commands:\n",21);
 		write(fd,"# scpp, scc, asm -- internal compilers (See manual pages for usage)\n",68);
+		write(fd,"# catch -- run a program and catch exceptions like SIGSEGV (used with SCC)\n",75);
 		write(fd,"# mkdir -- create directories\n",30);
 		write(fd,"# remove -- remove files or directories\n",40);
 		write(fd,"# rename -- rename file or directory\n",37);
+		if(!strcmp(new_project_type,"scc"))
+		{
+			write(fd,"mkdir tmp\n",10);
+			write(fd,"scpp main.c tmp/main.i\n",23);
+			write(fd,"scc tmp/main.i tmp/main.asm\n",28);
+			write(fd,"asm tmp/main.asm tmp/main.elf tmp/main.map\n",43);
+			write(fd,"catch tmp/main.map tmp/main.dump tmp/main.elf\n",45);
+		}
 		close(fd);
-		char *new_dir;
-		new_dir=malloc(strlen(dir)+30);
-		if(new_dir==NULL)
+		if(!strcmp(new_project_type,"scc"))
 		{
-			return 1;
-		}
-		strcpy(new_dir,dir);
-		strcat(new_dir,"/include");
-		if(cpio_unpack_to_dir((char *)include_cpio_start,(long)include_cpio_end-(long)include_cpio_start,new_dir))
-		{
+			char *new_dir;
+			fd=openat(project_dir_fd,"main.c",578,0644);
+			if(fd<0)
+			{
+				return 1;
+			}
+			write(fd,"#include \"include/syscall.c\"\n",29);
+			write(fd,"int main(void)\n",15);
+			write(fd,"{\n",2);
+			write(fd,"\twrite(1,\"Welcome to CUIDE\\n\",17);\n",35);
+			write(fd,"\treturn 0;\n",11);
+			write(fd,"}\n",2);
+			close(fd);
+			new_dir=malloc(strlen(dir)+30);
+			if(new_dir==NULL)
+			{
+				return 1;
+			}
+			strcpy(new_dir,dir);
+			strcat(new_dir,"/include");
+			if(cpio_unpack_to_dir((char *)include_cpio_start,(long)include_cpio_end-(long)include_cpio_start,new_dir))
+			{
+				free(new_dir);
+				return 1;
+			}
 			free(new_dir);
-			return 1;
 		}
-		free(new_dir);
 	}
 	else if(ret==0&&(st.mode&0170000)==STAT_DIR)
 	{

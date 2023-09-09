@@ -6,7 +6,7 @@ void calculate_cast(struct syntax_tree *root,struct expr_ret *ret)
 	char *new_name;
 	calculate_expr(root->subtrees[2],&result);
 	array_function_to_pointer2(&result.decl);
-	deref_ptr(&result,root->line,root->col);
+	deref_ptr(&result,root->line,root->file);
 	new_name=mktmpname();
 	new_decl=syntax_tree_dup(root->subtrees[1]);
 	new_type=syntax_tree_dup(root->subtrees[0]);
@@ -23,7 +23,7 @@ void calculate_cast(struct syntax_tree *root,struct expr_ret *ret)
 	}
 	else
 	{
-		error(root->line,root->col,"invalid cast.");
+		error(root->line,root->file,"invalid cast.");
 	}
 	add_decl(new_type,new_decl,0,0,0,1);
 	ret->is_lval=0;

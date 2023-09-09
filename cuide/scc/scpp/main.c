@@ -65,14 +65,42 @@ void c_write(char *buf,int size)
 		--size;
 	}
 }
-char *read_line(int fd)
+char *read_line(int fd,char *current_dir,char *name,int flines)
 {
-	char *str;
-	char c;
+	char *str,*p;
+	char c,c1;
 	long int x;
 	str=0;
 	while(read(fd,&c,1)==1)
 	{
+		if(str==0&&c!='#')
+		{
+			str=xstrdup(" __line__ \"");
+			p=current_dir;
+			while(c1=*p)
+			{
+				if(c1=='\"'||c1=='\\')
+				{
+					str=str_c_app(str,'\\');
+				}
+				str=str_c_app(str,c1);
+				++p;
+			}
+			str=str_c_app(str,'/');
+			p=name;
+			while(c1=*p)
+			{
+				if(c1=='\"'||c1=='\\')
+				{
+					str=str_c_app(str,'\\');
+				}
+				str=str_c_app(str,c1);
+				++p;
+			}
+			str=str_s_app(str,"\" ");
+			str=str_i_app(str,current_line-flines+1);
+			str=str_c_app(str,'\n');
+		}
 		if(c=='\\')
 		{
 			if(read(fd,&c,1)==1)
@@ -101,7 +129,7 @@ char *read_line(int fd)
 		{
 			if(str==0)
 			{
-				str=xstrdup(" ");
+				str=str_s_app(str," ");
 			}
 			break;
 		}

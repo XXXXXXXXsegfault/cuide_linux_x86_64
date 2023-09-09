@@ -12,7 +12,7 @@ void calculate_member(struct syntax_tree *root,struct expr_ret *ret)
 		decl1=decl_next(result.decl);
 		if(!is_basic_decl(decl1))
 		{
-			error(root->line,root->col,"bad member name.");
+			error(root->line,root->file,"bad member name.");
 		}
 		syntax_tree_release(decl1);
 		ret->ptr_offset=result.ptr_offset;
@@ -21,18 +21,18 @@ void calculate_member(struct syntax_tree *root,struct expr_ret *ret)
 	{
 		if(!is_basic_decl(result.decl))
 		{
-			error(root->line,root->col,"bad member name.");
+			error(root->line,root->file,"bad member name.");
 		}
 	}
 	mlist=get_struct_member_list(result.type,0);
 	if(!mlist)
 	{
-		error(root->line,root->col,"bad member name.");
+		error(root->line,root->file,"bad member name.");
 	}
 	type=get_member_type(mlist,root->subtrees[1]->value);
 	if(type==0)
 	{
-		error(root->line,root->col,"bad member name.");
+		error(root->line,root->file,"bad member name.");
 	}
 	decl=get_member_decl(mlist,root->subtrees[1]->value);
 	off=get_member_offset(mlist,root->subtrees[1]->value);
@@ -77,27 +77,27 @@ void calculate_member_ptr(struct syntax_tree *root,struct expr_ret *ret)
 	char *new_name;
 
 	calculate_expr(root->subtrees[0],&result);
-	deref_ptr(&result,root->line,root->col);
+	deref_ptr(&result,root->line,root->file);
 	if(!is_pointer_array(result.decl))
 	{
-		error(root->line,root->col,"invalid use of \'->\'.");
+		error(root->line,root->file,"invalid use of \'->\'.");
 	}
 	decl1=decl_next(result.decl);
 	if(!is_basic_decl(decl1))
 	{
-		error(root->line,root->col,"invalid use of \'->\'.");
+		error(root->line,root->file,"invalid use of \'->\'.");
 	}
 	syntax_tree_release(decl1);
 
 	mlist=get_struct_member_list(result.type,0);
 	if(!mlist)
 	{
-		error(root->line,root->col,"bad member name.");
+		error(root->line,root->file,"bad member name.");
 	}
 	type=get_member_type(mlist,root->subtrees[1]->value);
 	if(type==0)
 	{
-		error(root->line,root->col,"bad member name.");
+		error(root->line,root->file,"bad member name.");
 	}
 	decl=get_member_decl(mlist,root->subtrees[1]->value);
 	off=get_member_offset(mlist,root->subtrees[1]->value);

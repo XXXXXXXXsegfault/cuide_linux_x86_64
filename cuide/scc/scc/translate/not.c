@@ -17,10 +17,10 @@ void calculate_not(struct syntax_tree *root,struct expr_ret *ret)
 		expr_ret_release(&result);
 		return;
 	}
-	deref_ptr(&result,root->line,root->col);
+	deref_ptr(&result,root->line,root->file);
 	if(!is_basic_decl(result.decl))
 	{
-		error(root->line,root->col,"invalid operand for \'~\'");
+		error(root->line,root->file,"invalid operand for \'~\'");
 	}
 	new_name=mktmpname();
 	new_decl=syntax_tree_dup(result.decl);

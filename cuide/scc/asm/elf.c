@@ -88,15 +88,11 @@ void c_write(char *buf,int size)
 }
 void out_addr(unsigned long int addr)
 {
-	int x;
-	x=64;
-	do
-	{
-		x-=4;
-		write(fde,"0123456789ABCDEF"+(addr>>x&0xf),1);
-	}
-	while(x);
-	write(fde,": ",2);
+	char buf[30];
+	buf[0]=0;
+	sprinti(buf,addr,20);
+	write(fde,buf,20);
+	write(fde,":",1);
 }
 
 void mkelf(void)
@@ -144,6 +140,7 @@ void mkelf(void)
 		if(fde>=0)
 		{
 			out_addr(l->ins_pos);
+			out_addr(strlen(l->str));
 			write(fde,l->str,strlen(l->str));
 			write(fde,"\n",1);
 		}

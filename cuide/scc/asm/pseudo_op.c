@@ -133,6 +133,15 @@ void parse_pseudo_op(char *str)
 			}
 		}
 	}
+	else if(str_match(&str,"line"))
+	{
+		word=read_word(&str);
+		free(current_file);
+		current_file=word;
+		word=read_word(&str);
+		sinputi(word,&source_current_line);
+		free(word);
+	}
 	else
 	{
 		error(l->line,"unknown pseudo-op.");
