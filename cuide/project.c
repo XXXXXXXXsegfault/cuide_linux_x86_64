@@ -35,7 +35,7 @@ int init_project(char *dir,char *new_project_type)
 			write(fd,"scpp main.c tmp/main.i\n",23);
 			write(fd,"scc tmp/main.i tmp/main.asm\n",28);
 			write(fd,"asm tmp/main.asm tmp/main.elf tmp/main.map\n",43);
-			write(fd,"catch tmp/main.map tmp/main.dump tmp/main.elf\n",45);
+			write(fd,"catch tmp/main.map tmp/main.dump tmp/main.elf\n",46);
 		}
 		close(fd);
 		if(!strcmp(new_project_type,"scc"))
