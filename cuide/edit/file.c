@@ -456,6 +456,7 @@ void addc_end(int c)
 {
 	struct file *node;
 	unsigned char *ptr;
+	file_saved=0;
 	if(!file_end||file_end->buflen==MAX_BUFLEN)
 	{
 		if(node=malloc(sizeof(*node)))
@@ -501,6 +502,7 @@ void delc_end(void)
 	{
 		return;
 	}
+	file_saved=0;
 	if(file_end->buflen==1)
 	{
 		file_block_delete(file_end);
@@ -639,6 +641,7 @@ void addc(int c)
 			move_next_line(&view_pos);
 		}
 	}
+	file_saved=0;
 }
 void delc(void)
 {
@@ -683,6 +686,7 @@ void delc(void)
 			move_prev_line(&view_pos);
 		}
 	}
+	file_saved=0;
 }
 void save_file(void)
 {
@@ -699,4 +703,5 @@ void save_file(void)
 		node=node->next;
 	}
 	close(fd);
+	file_saved=1;
 }

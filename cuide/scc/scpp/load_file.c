@@ -221,8 +221,15 @@ void do_include(char *current_dir,char *name,long int line,char *str)
 			fname=str_c_app(fname,c);
 		}
 		dname=dir_name(name);
-		new_dir=xstrdup(current_dir);
-		new_dir=str_c_app(new_dir,'/');
+		if(current_dir[1]!=0)
+		{
+			new_dir=xstrdup(current_dir);
+			new_dir=str_c_app(new_dir,'/');
+		}
+		else
+		{
+			new_dir=0;
+		}
 		new_dir=str_s_app(new_dir,dname);
 		free(dname);
 		dname=xstrdup(new_dir);

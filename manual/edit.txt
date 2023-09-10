@@ -36,8 +36,7 @@ P -- Paste Clipboard (Normal Mode Only)
 U -- Undo (Normal Mode Only)
 R -- Redo (Normal Mode Only)
 W -- Save file (Normal Mode Only)
-Q -- Exit text editor and discard changes since last 'W'
-     command (Normal Mode Only)
+Q -- Exit text editor (Normal Mode Only)
 T -- Move the cursor to the end of line
 C -- Copy the selected string to clipboard (Select Mode Only)
 D -- Cut the selected string to clipboard (Select Mode Only)

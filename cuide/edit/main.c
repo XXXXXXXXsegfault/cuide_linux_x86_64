@@ -1,5 +1,6 @@
 char *file_name;
 int current_x;
+int file_saved;
 #include "file.c"
 
 int mode; // 0 -- normal, 1 -- insert, 2 -- select, 3 -- command
@@ -330,7 +331,6 @@ void keypress_handler(int c)
 					addc_end(clipboard[x]);
 					current_pos_end=0;
 					cursor_right();
-					current_pos_end=1;
 				}
 				else
 				{
@@ -398,7 +398,6 @@ void keypress_handler(int c)
 				addc_end(c);
 				current_pos_end=0;
 				cursor_right();
-				current_pos_end=1;
 			}
 			else
 			{
@@ -476,9 +475,11 @@ struct edit_context
 	struct file *file_end;
 	struct file_pos current_pos;
 	struct file_pos view_pos;
-	long op_fifo_size;
+	int op_fifo_size;
 	int op_fifo_start;
 	int op_fifo_x;
+	short current_pos_end;
+	short file_saved;
 	unsigned short op_c_fifo[MAX_UNDOS];
 	unsigned long op_off_fifo[MAX_UNDOS];
 } *edit_context;
@@ -499,6 +500,8 @@ void edit_context_save(char *name)
 			p->op_fifo_size=op_fifo_size;
 			p->op_fifo_start=op_fifo_start;
 			p->op_fifo_x=op_fifo_x;
+			p->current_pos_end=current_pos_end;
+			p->file_saved=file_saved;
 			memcpy(p->op_c_fifo,op_c_fifo,sizeof(op_c_fifo));
 			memcpy(p->op_off_fifo,op_off_fifo,sizeof(op_off_fifo));
 			return;
@@ -526,6 +529,8 @@ void edit_context_save(char *name)
 	p->op_fifo_size=op_fifo_size;
 	p->op_fifo_start=op_fifo_start;
 	p->op_fifo_x=op_fifo_x;
+	p->current_pos_end=current_pos_end;
+	p->file_saved=file_saved;
 	memcpy(p->op_c_fifo,op_c_fifo,sizeof(op_c_fifo));
 	memcpy(p->op_off_fifo,op_off_fifo,sizeof(op_off_fifo));
 	p->next=edit_context;
@@ -568,6 +573,8 @@ int edit_context_load(char *name)
 			op_fifo_size=p->op_fifo_size;
 			op_fifo_start=p->op_fifo_start;
 			op_fifo_x=p->op_fifo_x;
+			current_pos_end=p->current_pos_end;
+			file_saved=p->file_saved;
 			memcpy(op_c_fifo,p->op_c_fifo,sizeof(op_c_fifo));
 			memcpy(op_off_fifo,p->op_off_fifo,sizeof(op_off_fifo));
 			return 1;
@@ -601,6 +608,7 @@ long edit_file(char *file,int pos)
 	{
 		return -1;
 	}
+	file_saved=1;
 	while(pos)
 	{
 		cursor_right();
@@ -650,4 +658,39 @@ loaded_file:
 	op_fifo_start=0;
 	op_fifo_x=0;
 	return ret;
+}
+void save_all_files(void)
+{
+	struct edit_context *file;
+	char ans[64];
+	file=edit_context;
+	while(file)
+	{
+		if(!file->file_saved)
+		{
+			while(1)
+			{
+				write(1,"Save file ",10);
+				write(1,file->file_name,strlen(file->file_name));
+				write(1," (Y/N)? ",8);
+				if(read(0,ans,64)==2)
+				{
+					if(ans[1]=='\n')
+					{
+						if(ans[0]=='Y')
+						{
+							edit_context_load(file->file_name);
+							save_file();
+							break;
+						}
+						else if(ans[0]=='N')
+						{
+							break;
+						}
+					}
+				}
+			}
+		}
+		file=file->next;
+	}
 }

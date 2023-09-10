@@ -76,7 +76,12 @@ char *read_line(int fd,char *current_dir,char *name,int flines)
 		if(str==0&&c!='#')
 		{
 			str=xstrdup(" __line__ \"");
-			p=current_dir;
+			p=current_dir+1;
+			if(!*p)
+			{
+				goto no_current_dir;
+			}
+			++p;
 			while(c1=*p)
 			{
 				if(c1=='\"'||c1=='\\')
@@ -87,6 +92,7 @@ char *read_line(int fd,char *current_dir,char *name,int flines)
 				++p;
 			}
 			str=str_c_app(str,'/');
+no_current_dir:
 			p=name;
 			while(c1=*p)
 			{

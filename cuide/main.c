@@ -74,6 +74,16 @@ void SH_winch(int sig)
 	}
 	winsize_change=1;
 }
+void close_fds(void)
+{
+	int fd;
+	fd=3;
+	while(fd<1024)
+	{
+		close(fd);
+		++fd;
+	}
+}
 int getc(void)
 {
 	int c[1];
@@ -263,6 +273,7 @@ int exec_cmd(char *s,int size)
 	{
 		return 0;
 	}
+	arg[x]=NULL;
 	if(!strcmp(arg[0],"scpp"))
 	{
 		int pid;
@@ -520,7 +531,6 @@ int exec_cmd(char *s,int size)
 		}
 		return ret;
 	}
-	arg[x]=NULL;
 	int pid;
 	int ret;
 	ioctl(0,TCSETS,&old_term);
@@ -534,6 +544,7 @@ int exec_cmd(char *s,int size)
 		signal(SIGINT,SIG_DFL);
 		signal(SIGQUIT,SIG_DFL);
 		unblock_sigwinch();
+		close_fds();
 		execv(arg[0],arg);
 		exit(1);
 	}
@@ -867,5 +878,6 @@ int main(int argc,char **argv)
 	}
 	ioctl(0,TCSETS,&old_term);
 	write(1,"\033[2J\033[1;1H",10);
+	edit__save_all_files();
 	return 0;
 }

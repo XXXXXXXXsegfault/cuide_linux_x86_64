@@ -56,12 +56,13 @@ Found:
 	*pos=fname;
 	return 0;
 }
-int dump_backtrace(char *map,char *out,int pid)
+int dump_backtrace(char *map,char *out,int pid,int sig)
 {
 	int fdmap,fdo;
 	int dumpsize;
 	long fp,pc;
 	char *pos;
+	char msg[256];
 	unsigned long regs[27];
 	fdmap=openat(project_dir_fd,map,0,0);
 	if(fdmap<0)
@@ -74,6 +75,10 @@ int dump_backtrace(char *map,char *out,int pid)
 		close(fdmap);
 		return 1;
 	}
+	strcpy(msg,"Program terminated with signal ");
+	sprinti(msg,sig,1);
+	strcat(msg,"\nBacktrace:\n");
+	write(fdo,msg,strlen(msg));
 	dumpsize=1024;
 	ptrace(PTRACE_GETREGS,pid,0,regs);
 	pc=regs[16]; // rip
@@ -106,6 +111,7 @@ int dump_backtrace(char *map,char *out,int pid)
 int catch_run(int argc,char **argv)
 {
 	int pid,status;
+	long val;
 	char msg[256];
 	if(argc<4)
 	{
@@ -123,31 +129,35 @@ int catch_run(int argc,char **argv)
 	{
 		signal(SIGINT,SIG_IGN);
 		pid=waitpid(-1,&status,0x40000000);
-		ptrace(PTRACE_SETOPTIONS,pid,0,PTRACE_O_EXITKILL);
+		ptrace(PTRACE_SETOPTIONS,pid,0,PTRACE_O_EXITKILL|PTRACE_O_TRACEEXIT);
+		ptrace(PTRACE_CONT,pid,0,0);
+		strcpy(msg,"\nBacktrace will be dumped to ");
+		strcat(msg,argv[2]);
+		strcat(msg,"\n\n");
+		write(1,msg,strlen(msg));
 		do
 		{
+			if(status>>8==(SIGTRAP|PTRACE_EVENT_EXIT<<8))
+			{
+				ptrace(PTRACE_GETEVENTMSG,pid,0,&val);
+				if(val&=0x7f)
+				{
+					dump_backtrace(argv[1],argv[2],pid,val);
+				}
+				return 0;
+			}
 			if((status&0x7f)==0x7f)
 			{
 				int sig;
 				sig=status>>8&0xff;
-				if(sig==SIGSEGV||sig==SIGBUS||sig==SIGILL||sig==SIGFPE)
-				{
-					signal(SIGINT,SIG_DFL);
-					if(dump_backtrace(argv[1],argv[2],pid))
-					{
-						return 0;
-					}
-					strcpy(msg,"Backtrace is dumped to ");
-					strcat(msg,argv[2]);
-					strcat(msg,"\n");
-					write(1,msg,strlen(msg));
-					return 0;
-				}
 				if(sig==SIGTRAP)
 				{
 					sig=0;
 				}
-				ptrace(PTRACE_CONT,pid,0,sig);
+				if(sig!=SIGSTOP&&sig!=SIGTSTP)
+				{
+					ptrace(PTRACE_CONT,pid,0,sig);
+				}
 			}
 			else
 			{
@@ -161,6 +171,7 @@ int catch_run(int argc,char **argv)
 	{
 		ptrace(PTRACE_TRACEME,0,0,0);
 		kill(getpid(),SIGSTOP);
+		close_fds();
 		execv(argv[3],argv+3);
 		write(1,"Cannot execute file\n",20);
 		exit(-1);
